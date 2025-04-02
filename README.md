@@ -1,2 +1,2 @@
 # xaisurvey
-Survey to rank XAI methods qualitatively
+Streamlit-based survey to rank XAI methods qualitatively.
