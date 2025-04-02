@@ -14,8 +14,8 @@ QUESTION_SCALE_MAP = {
         'scale': ["1 - Not at all", "2", "3", "4", "5 - Perfectly aligned"]
     },
     'relevance': {
-        'question': "Does the highlighted area make sense for the classification?",
-        'scale': ["1 - Not at all", "2", "3", "4", "5 - Perfectly relevant"]
+        'question': "Does the highlighted area, that is not aligned with ground truth, make sense for the classification?",
+        'scale': ["1 - Not at all", "2", "3", "4", "5 - Perfectly relevant", "The explanation is perfectly aligned"]
     }
 }
 
