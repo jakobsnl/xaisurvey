@@ -5,7 +5,6 @@ import json
 from PIL import Image
 
 from config import IMAGE_FOLDER, RESULTS_FILE, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES
-# Configuration
 
 # Function to randomly pick an explanation method and threshold image
 def sample_explanation(object_folder):
