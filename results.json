@@ -1,0 +1,19 @@
+{
+    "ml_familiarity": "Very familiar",
+    "responses": [
+        {
+            "object_folder": "02",
+            "method": "GradCAM",
+            "threshold_image": "20",
+            "alignment": "5 - Perfectly aligned",
+            "relevance": "5 - Perfectly relevant"
+        },
+        {
+            "object_folder": "01",
+            "method": "GradCAM",
+            "threshold_image": "10",
+            "alignment": "2",
+            "relevance": "3"
+        }
+    ]
+}
