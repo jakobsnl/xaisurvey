@@ -5,7 +5,7 @@
             "object_folder": "02",
             "method": "GradCAM",
             "threshold_image": "20",
-            "alignment": "5 - Perfectly aligned",
+            "alignment": "4",
             "relevance": "5 - Perfectly relevant"
         },
         {
