@@ -1,14 +1,20 @@
-import streamlit as st
+import datetime
+import json
 import os
 import random
-import json
+import streamlit as st
+
 from PIL import Image
+from pymongo import MongoClient
 
 from config import IMAGE_FOLDER, RESULTS_FILE, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES
-
+from get_database import get_database
+from datetime import datetime
+    
+    
 # Function to randomly pick an explanation method and threshold image
-def sample_explanation(object_folder):
-    explanations_path = os.path.join(IMAGE_FOLDER, object_folder, 'exs')
+def sample_explanation(object_folder: str) -> tuple:
+    explanations_path = os.path.join(IMAGE_FOLDER, object_folder)
     if not os.path.exists(explanations_path):
         return None, None
     
@@ -26,6 +32,9 @@ def sample_explanation(object_folder):
     selected_threshold = random.choice(thresholds)
     return selected_method, selected_threshold
 
+db = get_database()
+collection = db['responses']
+
 # Initialize session state variables
 if 'evaluation_started' not in st.session_state:
     st.session_state.evaluation_started = False
@@ -38,7 +47,7 @@ if 'responses' not in st.session_state:
 if 'ml_familiarity' not in st.session_state:
     st.session_state.ml_familiarity = None
 if 'sampled_objects' not in st.session_state:
-    object_folders = [f for f in os.listdir(IMAGE_FOLDER) if os.path.isdir(os.path.join(IMAGE_FOLDER, f)) and f.isdigit()]
+    object_folders = [f for f in os.listdir(IMAGE_FOLDER) if os.path.isdir(os.path.join(IMAGE_FOLDER, f))]
     st.session_state.sampled_objects = random.sample(object_folders, min(NUM_SAMPLES, len(object_folders)))
 if 'sampled_explanations' not in st.session_state:
     st.session_state.sampled_explanations = [sample_explanation(obj) for obj in st.session_state.sampled_objects]
@@ -62,12 +71,8 @@ if not st.session_state.examples_shown:
     st.write('Below are two example cases to help you understand how to rank explanations.')
     
     # Display the examples
-    for exp_path, gt_path, rank in EXAMPLE_IMAGES:
-        col1, col2 = st.columns(2)
-        with col1:
-            st.image(Image.open(exp_path), caption=f'Explanation', use_container_width=True)
-        with col2:
-            st.image(Image.open(gt_path), caption='Ground Truth', use_container_width=True)
+    for exp_path, rank in EXAMPLE_IMAGES:
+        st.image(Image.open(exp_path), caption=f'Explanation', use_container_width=True)
         st.write(f'This should be ranked as [{rank}] out of 5.')
         
         # Dummy Intuition on why to rank like this
@@ -108,7 +113,6 @@ else:
     if st.session_state.current_index < len(st.session_state.sampled_objects):
         # Persist the warning message
         object_folder = st.session_state.sampled_objects[st.session_state.current_index]
-        ground_truth_path = os.path.join(IMAGE_FOLDER, object_folder, 'groundtruth.png')
         method, threshold_image = st.session_state.sampled_explanations[st.session_state.current_index]
         
         if method is None or threshold_image is None:
@@ -116,13 +120,9 @@ else:
             st.session_state.current_index += 1
             st.rerun()
         else:
-            explanation_path = os.path.join(IMAGE_FOLDER, object_folder, 'exs', method, threshold_image)
+            explanation_path = os.path.join(IMAGE_FOLDER, object_folder, method, threshold_image)
             
-            col1, col2 = st.columns(2)
-            with col1:
-                st.image(Image.open(explanation_path), use_container_width=True)
-            with col2:
-                st.image(Image.open(ground_truth_path), use_container_width=True)
+            st.image(Image.open(explanation_path), use_container_width=True)
 
             # Ask the alignment question and check for a valid response
             alignment = None
@@ -163,12 +163,11 @@ else:
                 st.session_state.show_warning = False  # Reset warning when user proceeds
                 st.rerun()
     else:
-        # Save results
+        # Save results to MongoDB
         results = {
             'ml_familiarity': st.session_state.ml_familiarity,
-            'responses': st.session_state.responses
+            'responses': st.session_state.responses,
+            'timestamp': datetime.now().isoformat()
         }
-        with open(RESULTS_FILE, 'w') as f:
-            json.dump(results, f, indent=4)
-        
-        st.success('Evaluation completed! Results saved.')
+        collection.insert_one(results)
+        st.success('Evaluation completed! Results sent to MongoDB.')
