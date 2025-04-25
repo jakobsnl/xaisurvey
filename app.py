@@ -5,9 +5,8 @@ import random
 import streamlit as st
 
 from PIL import Image
-from pymongo import MongoClient
 
-from config import IMAGE_FOLDER, RESULTS_FILE, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES
+from config import IMAGE_FOLDER, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES
 from get_database import get_database
 from datetime import datetime
     
