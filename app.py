@@ -182,7 +182,8 @@ elif not st.session_state.evaluation_started:
     selected_familiarity = st.radio(
         familiarity_map['question'],
         familiarity_map['scale'], 
-        index=None
+        index=None,
+        horizontal=True
     )
 
     if st.button('Start Evaluation'):
@@ -220,7 +221,8 @@ else:
             alignment_map['question'],
             alignment_map['scale'],
             index=None, 
-            key=f'xai_alignment_{st.session_state.current_index}'  # Unique key
+            key=f'xai_alignment_{st.session_state.current_index}',
+            horizontal=True
         )
         # Ask the relevance question and check for a valid response
         relevance = None
@@ -229,7 +231,8 @@ else:
             relevance_map['question'],
             relevance_map['scale'],
             index=None, 
-            key=f'xai_relevance_{st.session_state.current_index}'
+            key=f'xai_relevance_{st.session_state.current_index}',
+            horizontal=True
         )
         
         # Display warning if no response is selected

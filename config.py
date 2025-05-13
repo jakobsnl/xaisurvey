@@ -18,6 +18,6 @@ QUESTION_SCALE_MAP = {
 }
 
 EXAMPLE_IMAGES = [
-    ('data/n01582220/DeepLift/0.jpg', 1),
-    ('data/n03584254/GradCAM_smoothxGuidedBackprop/70.jpg', 5)
+    ('assets/n01582220/DeepLift/70.jpg', 4),
+    ('data/n01978455/GuidedGradCam/0.jpg', 1)
 ]
