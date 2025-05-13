@@ -1,8 +1,5 @@
-#display class label with groundtruth
-#MONGODB_CONNECTION_STRING = 'mongodb+srv://streamlit:hertie@xai-survey.zyysxjv.mongodb.net/?retryWrites=true&w=majority&appName=xai-survey'
 IMAGE_FOLDER = 'data'
-RESULTS_FILE = 'results.json'
-NUM_SAMPLES = 1
+NUM_SAMPLES = 2
 
 QUESTION_SCALE_MAP = {
     'familarity': {
@@ -10,11 +7,12 @@ QUESTION_SCALE_MAP = {
         'scale': ['Not familiar', 'Somewhat familiar', 'Very familiar']
     },
     'alignment': {
-        'question': 'To what degree is the explanation aligned with the classified object?',
+        'question': 'To what degree is the explanation (right) aligned with the classified object bordered in green (left)?',
         'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
     },
     'relevance': {
-        'question': 'Does the highlighted area, that is not aligned with ground truth, make sense for the classification?',
+        #Does the part of the explanation, that does not cover the green-highlighted object, appear meaningful for the classificationl?
+        'question': 'Does the explanation outside the green-highlighted object appear meaningful for classifying the image?',
         'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly relevant', 'The explanation is perfectly aligned']
     }
 }
