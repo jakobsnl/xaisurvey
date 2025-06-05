@@ -1,5 +1,5 @@
 IMAGE_FOLDER = 'data'
-NUM_SAMPLES = 50
+NUM_SAMPLES = 75
 
 QUESTION_SCALE_MAP = {
     'familarity': {
