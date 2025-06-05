@@ -202,7 +202,7 @@ elif not st.session_state.examples_shown:
         for exp_path, comment in images:
             st.image(Image.open(exp_path), use_container_width=True)
             st.write(f'{comment}')
-            st.divider() # Add a divider for better separation
+        st.divider() # Add a divider for better separation
     
     if st.button('Proceed to Survey'):
         st.session_state.examples_shown = True
