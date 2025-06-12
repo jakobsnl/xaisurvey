@@ -3,7 +3,7 @@ NUM_SAMPLES = 75
 
 QUESTION_SCALE_MAP = {
     'familarity': {
-        'question': 'How familiar are you with machine learning and AI concepts?',
+        'question': 'How familiar are You with machine learning and AI concepts?',
         'scale': ['Not familiar', 'Somewhat familiar', 'Very familiar']
     },
     'alignment': {
@@ -19,14 +19,14 @@ QUESTION_SCALE_MAP = {
 EXAMPLE_IMAGES = {
     'DeepLift': [
         ('assets/n03095699/DeepLift/0.jpg', 'The majority of importance is assigned to the space between bridge and ship, making it not aligned very well.'), #bridge
-        ('assets/n01695060/DeepLift/0.jpg', 'The same applies here, yet one can argue, that for the komodo dragon, a humans attention is lead towards the groundtruth here.') #komodo dragon
+        ('assets/n01695060/DeepLift/0.jpg', 'The same applies here, yet one can argue, that for the komodo dragon, human attention is lead towards the **ground truth** here.') #komodo dragon
     ],
     'GradCAM': [
         ('assets/n03095699/GradCAM/0.jpg', 'Even though medium importance is assigned to the bridge (right), the majority of importance is assigned to the ship.'), 
-        ('assets/n01695060/GradCAM/0.jpg', 'Even better focus on the **ground truth**. Artifacts like on the right (0 importance) can be ignored for the survey, if not in relevant parts of the image.')
+        ('assets/n01695060/GradCAM/0.jpg', 'Even better focus on the **ground truth**. Important note: Artifacts like on the right (0 importance) can be ignored for the survey, if not in relevant parts of the image.')
     ],
     'GuidedBackprop': [
-        ('assets/n03095699/GuidedBackprop/0.jpg', 'significant importance is assigned to the bridge. For question 2, this requires You to decide, if a bridge is relevant for classifying the ground truth object as a container ship, or not.'),
+        ('assets/n03095699/GuidedBackprop/0.jpg', 'Significant importance is assigned to the bridge. For question 2, this requires You to decide, if a bridge is relevant for classifying the ground truth object as a container ship, or not.'),
         ('assets/n01695060/GuidedBackprop/0.jpg', 'Again, some importance on the background, but to smaller extent.')
     ],
     'LRP_EpsilonAlpha2Beta1': [

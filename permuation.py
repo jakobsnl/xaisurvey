@@ -16,14 +16,14 @@ def populate_samples():
         methods = [m for m in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, m))]
         for method in methods:
             method_path = os.path.join(folder_path, method)
-            thresholds = [t for t in os.listdir(method_path) if t.endswith('.jpg')]
-            for threshold in thresholds:
-                combinations.append({
-                    'sample': folder,
-                    'method': method,
-                    'threshold': threshold,
-                    'used': False  # Mark as unused initially
-                })
+            #thresholds = [t for t in os.listdir(method_path) if t.endswith('.jpg')]
+            #for threshold in thresholds:
+            combinations.append({
+                'sample': folder,
+                'method': method,
+                'threshold': '0.jpg',
+                'used': False  # Mark as unused initially
+            })
 
     # Insert all combinations into MongoDB
     if combinations:
