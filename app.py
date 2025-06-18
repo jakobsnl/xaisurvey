@@ -6,10 +6,10 @@ import streamlit as st
 import uuid
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from PIL import Image
 
-from config import IMAGE_FOLDER, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES, NUM_CHECKS, ATTENTION_CHECKS
+from config import IMAGE_FOLDER, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES, NUM_CHECKS, ATTENTION_CHECKS, RESERVATION_TIMEOUT
 from get_database import get_database
 from permuation import populate_samples
 
@@ -31,13 +31,22 @@ def increase_font_size() -> None:
 # Login function
 def login(username, password) -> bool:
     user = st.session_state.db['users'].find_one({"username": username})
-    if user and user['password']==password:
+    if user and user['password'] == password:
         return True
     return False
 
 
 def draw_samples(num_samples, remaining_samples) -> list:
-    all_samples = list(remaining_samples.find({}))
+    now = datetime.now()
+    
+    available_samples_cursor = remaining_samples.find({
+        '$or': [
+            {'reserved_until': {'$exists': False}}, #not reserved
+            {'reserved_until': {'$lt': now.isoformat()}} #reserved but expired
+        ]
+    })
+    
+    all_samples = list(available_samples_cursor)
     grouped_by_folder = defaultdict(list)
 
     for sample in all_samples:
@@ -46,14 +55,32 @@ def draw_samples(num_samples, remaining_samples) -> list:
     folders = list(grouped_by_folder.keys())
     random.shuffle(folders)
 
-    drawn_samples = []
+    drawn_samples = []    
     for folder in folders:
         if len(drawn_samples) >= num_samples:
             break
         sample = random.choice(grouped_by_folder[folder])
-        drawn_samples.append(sample)
+        reservation_expiry = now + timedelta(seconds=RESERVATION_TIMEOUT)
+        result = remaining_samples.update_one(
+            {
+                '_id': sample['_id'],
+                '$or': [
+                    {'reserved_until': {'$exists': False}},
+                    {'reserved_until': {'$lt': now}}
+                ]
+            },
+            {'$set': {'reserved_until': reservation_expiry.isoformat()}}
+        )
+        
+        if result.modified_count == 1:
+            # reservation successful, add to drawn samples
+            drawn_samples.append(sample)
+        else:
+            # reservation not successful, skip this sample
+            continue
 
     return drawn_samples
+
 
 @st.cache_data
 def display_briefing() -> None:
@@ -148,22 +175,23 @@ if not st.session_state.logged_in:
         
 # Show examples before starting evaluation
 elif not st.session_state.examples_shown:
+    if 'timestamp' not in st.session_state:
+        st.session_state.timestamp = datetime.now()
+        
     display_briefing()
     
     if st.button('Proceed to Survey'):
         st.session_state.examples_shown = True
+        st.session_state.db['briefings'].insert_one({
+                    'user_group': st.session_state.username,
+                    'user_id': st.session_state.user_id,
+                    'start': st.session_state.timestamp,
+                    'end': datetime.now().isoformat()
+                })
         st.rerun()
 
 # Initial question
 else:
-    #users_collection = db['users']
-    #familiarities = db['familiarities']
-    #responses = db['responses']
-    #remaining_samples = db['combinations']
-    #manipulation_checks = db['manipulation_checks']
-    #manipulation_reports = db['manipulation_reports']
-    # Generate a unique user ID when the survey starts
-
     if not st.session_state.evaluation_started:
         familiarity_map = QUESTION_SCALE_MAP['familarity']
         
@@ -193,9 +221,12 @@ else:
                     'timestamp': st.session_state.timestamp
                 }
                 st.session_state.db['familiarities'].insert_one(familiarity)
+                st.session_state.show_warning = False
                 st.rerun()
             else:
-                st.warning('Please select an answer before proceeding.')
+                st.session_state.show_warning = True
+        if st.session_state.show_warning:
+            st.warning('Please select an answer before proceeding.')
         st.stop()
     
     # Sample explanations if not already sampled
@@ -243,7 +274,7 @@ else:
                     index=None,
                     key=f"attention_{st.session_state.current_index}"
                 )
-            
+                
             if st.button('Next'):
                 if answer is None:
                     st.session_state.show_warning = True
@@ -264,6 +295,10 @@ else:
                 st.session_state.current_index += 1
                 st.session_state.show_warning = False  # Reset warning when user proceeds
                 st.rerun()
+            
+            # Display warning if no response is selected
+            if st.session_state.show_warning:
+                st.warning('Please select an answer to continue.')
         else:
             object_folder = drawn_sample['object_folder']
             method = drawn_sample['method']
@@ -300,14 +335,10 @@ else:
             
             increase_font_size()
             st.divider() # Add a divider for better separation
-            
-            # Display warning if no response is selected
-            if st.session_state.show_warning:
-                st.warning('Please select answers to continue.')
                 
             if st.button('Next'):
                 if alignment is None or relevance is None:
-                    st.warning('Please select an answer before proceeding.')
+                    st.session_state.show_warning = True
                     st.rerun()
                 # Save the responses
                 response = {
@@ -333,6 +364,42 @@ else:
                 st.session_state.current_index += 1
                 st.session_state.show_warning = False  # Reset warning when user proceeds
                 st.rerun()
+                
+            # Display warning if no response is selected
+            if st.session_state.show_warning:
+                st.warning('Please select answers to continue.')
+                
+    elif 'self_evaluation' not in st.session_state:
+        self_evaluation_map = QUESTION_SCALE_MAP['self_evaluation']
+
+        # Bind radio selection directly to session state
+        self_evaluation_response = st.radio(
+            self_evaluation_map['question'],
+            self_evaluation_map['scale'], 
+            index=None,
+            horizontal=True
+        )
+        
+        increase_font_size() 
+        
+        if st.button('Submit Survey'):
+            if self_evaluation_response is not None:
+                st.session_state.timestamp = datetime.now().isoformat()
+                self_evaluation = {
+                    'user_group': st.session_state.username,
+                    'user_id': st.session_state.user_id,
+                    'self_evaluation': self_evaluation_response,
+                    'timestamp': st.session_state.timestamp
+                }
+                st.session_state.self_evaluation = self_evaluation  # Store in session state for rerun
+                st.session_state.db['self_evaluations'].insert_one(self_evaluation)
+                st.session_state.show_warning = False
+                st.rerun()
+            else:
+                st.session_state.show_warning = True
+        # Display warning if no response is selected
+        if st.session_state.show_warning:
+            st.warning('Please select an answer before submitting.')
     else:
         number_checks_failed = 0
         for manipulation_check in st.session_state.manipulation_checks:

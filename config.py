@@ -1,6 +1,7 @@
 IMAGE_FOLDER = 'data'
-NUM_SAMPLES = 75
-NUM_CHECKS = 3
+NUM_SAMPLES = 2 #75
+NUM_CHECKS = 2 #3
+RESERVATION_TIMEOUT = 20 * 60  # seconds
 
 ATTENTION_CHECKS = [
     {'type': 'manipulation', 'question': "I swim across the Atlantic Ocean to get to work every day", 'correct_answers': ["Strongly Disagree", "Disagree"]},
@@ -28,7 +29,11 @@ QUESTION_SCALE_MAP = {
     'relevance': {
         'question': 'Does the importance map not related to the green-highlighted object appear meaningful for classifying the image?',
         'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
-    }
+    },
+    'self_evaluation': {
+        'question': 'Considering Your level of focus/ distraction thoughout this survey: What is the quality of the data provided by You?',
+        'scale': ['1 - Very bad', '2 - Bad', '3 - Okay', '4 - Good', '5 - Very good']
+    },
 }
 
 EXAMPLE_IMAGES = {
