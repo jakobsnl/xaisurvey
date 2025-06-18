@@ -6,6 +6,7 @@ from get_database import get_database
 
 def populate_samples():
     db = get_database()
+    db.combinations.drop()
     collection = db['combinations']
 
     # Iterate through all folders and methods

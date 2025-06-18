@@ -8,7 +8,7 @@ import uuid
 from PIL import Image
 from datetime import datetime
 
-from config import IMAGE_FOLDER, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES
+from config import IMAGE_FOLDER, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES, NUM_CHECKS, ATTENTION_CHECKS
 from get_database import get_database
 from permuation import populate_samples
 
@@ -99,6 +99,8 @@ users_collection = db['users']
 remaining_samples = db['combinations']
 familiarities = db['familiarities']
 responses = db['responses']
+manipulation_checks = db['manipulation_checks']
+manipulation_reports = db['manipulation_reports']
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -115,17 +117,26 @@ if 'user_id' not in st.session_state:
 if 'sampled_explanations' not in st.session_state:
     st.session_state.sampled_explanations = []
     drawn_samples = draw_samples(NUM_SAMPLES, remaining_samples)
+    sampled_explanations = []
     for drawn_sample in drawn_samples:
         sample_folder = drawn_sample['sample']
         method = drawn_sample['method']
         threshold = drawn_sample['threshold']
-        st.session_state.sampled_explanations.append({
+        sampled_explanations.append({
+            'type': 'xai',
             'object_folder': sample_folder,
             'method': method,
             'threshold': threshold
         })
         print(f"Sampled: {sample_folder}, {method}, {threshold}")
-
+        
+    attention_checks = random.sample(ATTENTION_CHECKS, k=NUM_CHECKS)
+    for check in attention_checks:
+        insert_index = random.randint(0, len(sampled_explanations))
+        sampled_explanations.insert(insert_index, check)
+    st.session_state.sampled_explanations = sampled_explanations
+        
+    
 # Initialize session state variables
 if 'evaluation_started' not in st.session_state:
     st.session_state.evaluation_started = False
@@ -133,8 +144,10 @@ if 'examples_shown' not in st.session_state:
     st.session_state.examples_shown = False
 if 'current_index' not in st.session_state:
     st.session_state.current_index = 0
-if 'responses' not in st.session_state:
-    st.session_state.responses = []
+# if 'responses' not in st.session_state:
+#     st.session_state.responses = []
+if 'manipulation_checks' not in st.session_state:
+    st.session_state.manipulation_checks = []
 if 'ml_familiarity' not in st.session_state:
     st.session_state.ml_familiarity = None
 if 'show_warning' not in st.session_state:
@@ -249,73 +262,128 @@ else:
     if st.session_state.current_index < len(st.session_state.sampled_explanations):
         # Get the current drawn_sample
         drawn_sample = st.session_state.sampled_explanations[st.session_state.current_index]
-        object_folder = drawn_sample['object_folder']
-        method = drawn_sample['method']
-        threshold = drawn_sample['threshold']
+        
+        if drawn_sample.get('type') != 'xai':
+            if drawn_sample.get('type') == 'manipulation':
+                st.markdown("**Please indicate your agreement with the statements below**")
+                answer = st.radio(
+                    drawn_sample['question'],
+                    ["Strongly Disagree", "Disagree", "Agree", "Strongly Agree"],
+                    index=None,
+                    key=f"manipulation_{st.session_state.current_index}",
+                    horizontal=True
+                )
 
-        explanation_path = os.path.join(IMAGE_FOLDER, object_folder, method, threshold)
-        st.image(Image.open(explanation_path), use_container_width=True)
-
-        st.divider() # Add a divider for better separation
-        
-        # Ask the alignment question and check for a valid response
-        alignment = None
-        alignment_map = QUESTION_SCALE_MAP['alignment']
-        alignment = st.radio(
-            alignment_map['question'],
-            alignment_map['scale'],
-            index=None, 
-            key=f'xai_alignment_{st.session_state.current_index}',
-            horizontal=True
-        )
-        
-        st.divider() # Add a divider for better separation
-        
-        # Ask the relevance question and check for a valid response
-        relevance = None
-        relevance_map = QUESTION_SCALE_MAP['relevance']
-        relevance = st.radio(
-            relevance_map['question'],
-            relevance_map['scale'],
-            index=None, 
-            key=f'xai_relevance_{st.session_state.current_index}',
-            horizontal=True
-        )
-        
-        increase_font_size()
-        st.divider() # Add a divider for better separation
-        
-        # Display warning if no response is selected
-        if st.session_state.show_warning:
-            st.warning('Please select answers to continue.')
+            elif drawn_sample.get('type') == 'attention':
+                st.markdown(f"**{drawn_sample['question']}**")
+                answer = st.radio(
+                    "Based on the text you read above, what colour have you been asked to enter?",
+                    ['Red', 'Blue', 'Green', 'Orange', 'Brown'],
+                    index=None,
+                    key=f"attention_{st.session_state.current_index}"
+                )
             
-        if st.button('Next'):
-            if alignment is None or relevance is None:
-                st.session_state.show_warning = True
+            if st.button('Next'):
+                if answer is None:
+                    st.session_state.show_warning = True
+                    st.rerun()
+                # Save the responses
+                manipulation_check = {
+                    'user_id': st.session_state.user_id,
+                    'question': drawn_sample['question'],
+                    'answer': answer,
+                    'failed': 0 if answer in drawn_sample.get('correct_answers') else 1,
+                    'index': st.session_state.current_index,
+                    'timestamp': datetime.now().isoformat()
+                }
+                
+                manipulation_checks.insert_one(manipulation_check)
+
+                st.session_state.manipulation_checks.append(manipulation_check)
+                st.session_state.current_index += 1
+                st.session_state.show_warning = False  # Reset warning when user proceeds
                 st.rerun()
-            # Save the responses
-            response = {
-                'user_group': st.session_state.username,
-                'user_id': st.session_state.user_id,
-                'sample': object_folder,
-                'method': method,
-                'threshold': threshold.split('.')[0],
-                'alignment': alignment,
-                'relevance': relevance,
-                'timestamp': datetime.now().isoformat()
-            }
+        else:
+            object_folder = drawn_sample['object_folder']
+            method = drawn_sample['method']
+            threshold = drawn_sample['threshold']
 
-            responses.insert_one(response)
+            explanation_path = os.path.join(IMAGE_FOLDER, object_folder, method, threshold)
+            st.image(Image.open(explanation_path), use_container_width=True)
 
-            # Delete the evaluated drawn_sample from the collection
-            remaining_samples.delete_one({
-                'sample': object_folder,
-                'method': method,
-                'threshold': threshold
-            })
+            st.divider() # Add a divider for better separation
             
-            st.session_state.current_index += 1
-            st.session_state.show_warning = False  # Reset warning when user proceeds
-            st.rerun()
+            # Ask the alignment question and check for a valid response
+            alignment = None
+            alignment_map = QUESTION_SCALE_MAP['alignment']
+            alignment = st.radio(
+                alignment_map['question'],
+                alignment_map['scale'],
+                index=None, 
+                key=f'xai_alignment_{st.session_state.current_index}',
+                horizontal=True
+            )
+            
+            st.divider() # Add a divider for better separation
+            
+            # Ask the relevance question and check for a valid response
+            relevance = None
+            relevance_map = QUESTION_SCALE_MAP['relevance']
+            relevance = st.radio(
+                relevance_map['question'],
+                relevance_map['scale'],
+                index=None, 
+                key=f'xai_relevance_{st.session_state.current_index}',
+                horizontal=True
+            )
+            
+            increase_font_size()
+            st.divider() # Add a divider for better separation
+            
+            # Display warning if no response is selected
+            if st.session_state.show_warning:
+                st.warning('Please select answers to continue.')
+                
+            if st.button('Next'):
+                if alignment is None or relevance is None:
+                    st.session_state.show_warning = True
+                    st.rerun()
+                # Save the responses
+                response = {
+                    'user_group': st.session_state.username,
+                    'user_id': st.session_state.user_id,
+                    'sample': object_folder,
+                    'method': method,
+                    'threshold': threshold.split('.')[0],
+                    'alignment': alignment,
+                    'relevance': relevance,
+                    'timestamp': datetime.now().isoformat()
+                }
+
+                responses.insert_one(response)
+
+                # Delete the evaluated drawn_sample from the collection
+                remaining_samples.delete_one({
+                    'sample': object_folder,
+                    'method': method,
+                    'threshold': threshold
+                })
+            
+                st.session_state.current_index += 1
+                st.session_state.show_warning = False  # Reset warning when user proceeds
+                st.rerun()
     else:
+        number_checks_failed = 0
+        for manipulation_check in st.session_state.manipulation_checks:
+            # Insert each manipulation check into the database
+            number_checks_failed += manipulation_check.get('failed')
+        
+        manipulation_reports.insert_one({
+            'user_group': st.session_state.username,
+            'user_id': st.session_state.user_id,
+            'indices': [mc['index'] for mc in st.session_state.manipulation_checks],
+            'number_checks': len(st.session_state.manipulation_checks),
+            'number_checks_failed': number_checks_failed
+        })
+        
         st.success('Evaluation completed! Results sent to MongoDB.')

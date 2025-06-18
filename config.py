@@ -1,9 +1,24 @@
 IMAGE_FOLDER = 'data'
 NUM_SAMPLES = 75
+NUM_CHECKS = 3
+
+ATTENTION_CHECKS = [
+    {'type': 'manipulation', 'question': "I swim across the Atlantic Ocean to get to work every day", 'correct_answers': ["Strongly Disagree", "Disagree"]},
+    {'type': 'manipulation', 'question': "I was born on the Moon and have never been to Earth", 'correct_answers': ["Strongly Disagree", "Disagree"]},
+    {'type': 'manipulation', 'question': "I have a pet unicorn that lives in my backyard", 'correct_answers': ["Strongly Disagree", "Disagree"]},
+    {'type': 'manipulation', 'question': "I can teleport to any place in the world instantly", 'correct_answers': ["Strongly Disagree", "Disagree"]},
+    {'type': 'manipulation', 'question': "I have a superpower that allows me to fly like a bird", 'correct_answers': ["Strongly Disagree", "Disagree"]},
+    {'type': 'attention', 'question': "The colour test you are about to take part in is very simple, when asked for your favourite colour you must select 'Green'.", 'correct_answers': ['Green']},
+    {'type': 'attention', 'question': "The colour test you are about to take part in is very simple, when asked for your favourite colour you must select 'Orange'.", 'correct_answers': ['Orange']},
+    {'type': 'attention', 'question': "The colour test you are about to take part in is very simple, when asked for your favourite colour you must select 'Blue'.", 'correct_answers': ['Blue']},
+    {'type': 'attention', 'question': "The colour test you are about to take part in is very simple, when asked for your favourite colour you must select 'Red'.", 'correct_answers': ['Red']},
+    {'type': 'attention', 'question': "The colour test you are about to take part in is very simple, when asked for your favourite colour you must select 'Brown'.", 'correct_answers': ['Brown']},
+    # Add more if needed
+]
 
 QUESTION_SCALE_MAP = {
     'familarity': {
-        'question': 'How familiar are You with machine learning and AI concepts?',
+        'question': 'How familiar are You with Machine Learning and concepts of Artificial Intelligence?',
         'scale': ['Not familiar', 'Somewhat familiar', 'Very familiar']
     },
     'alignment': {
