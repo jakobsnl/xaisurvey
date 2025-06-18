@@ -212,12 +212,12 @@ elif not st.session_state.examples_shown:
     
     st.divider() # Add a divider for better separation
     
-    # Display the examples
-    for method, images in EXAMPLE_IMAGES.items():
-        for exp_path, comment in images:
-            st.image(Image.open(exp_path), use_container_width=True)
-            st.write(f'{comment}')
-        st.divider() # Add a divider for better separation
+    # # Display the examples
+    # for method, images in EXAMPLE_IMAGES.items():
+    #     for exp_path, comment in images:
+    #         st.image(Image.open(exp_path), use_container_width=True)
+    #         st.write(f'{comment}')
+    #     st.divider() # Add a divider for better separation
     
     if st.button('Proceed to Survey'):
         st.session_state.examples_shown = True
@@ -346,7 +346,7 @@ else:
                 
             if st.button('Next'):
                 if alignment is None or relevance is None:
-                    st.session_state.show_warning = True
+                    st.warning('Please select an answer before proceeding.')
                     st.rerun()
                 # Save the responses
                 response = {
