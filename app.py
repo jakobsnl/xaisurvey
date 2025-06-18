@@ -5,8 +5,9 @@ import random
 import streamlit as st
 import uuid
 
-from PIL import Image
+from collections import defaultdict
 from datetime import datetime
+from PIL import Image
 
 from config import IMAGE_FOLDER, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES, NUM_CHECKS, ATTENTION_CHECKS
 from get_database import get_database
@@ -29,70 +30,30 @@ def increase_font_size() -> None:
 
 # Login function
 def login(username, password) -> bool:
-    user = users_collection.find_one({"username": username})
+    user = st.session_state.db['users'].find_one({"username": username})
     if user and user['password']==password:
         return True
     return False
 
 
 def draw_samples(num_samples, remaining_samples) -> list:
-    """
-    samples unique object folders and selects one method and threshold image for each.
-    Ensures that folders with no remaining drawn_samples are skipped.
-    Repopulates the collection if all drawn_samples are exhausted.
-    """
+    all_samples = list(remaining_samples.find({}))
+    grouped_by_folder = defaultdict(list)
+
+    for sample in all_samples:
+        grouped_by_folder[sample['sample']].append(sample)
+
+    folders = list(grouped_by_folder.keys())
+    random.shuffle(folders)
+
     drawn_samples = []
-
-    while len(drawn_samples) < num_samples:
-        # Check if there are any unused drawn_samples
-        if remaining_samples.count_documents({}) == 0:
-            # If no drawn_samples are left, repopulate the collection
-            populate_samples()
-
-        # Get all unique object folders with remaining drawn_samples
-        unique_folders = remaining_samples.distinct('sample')
-
-        # Filter out folders that have no remaining drawn_samples
-        valid_folders = [
-            folder for folder in unique_folders
-            if remaining_samples.count_documents({'sample': folder}) > 0
-        ]
-
-        # If there are no valid folders left after repopulation, break the loop
-        if not valid_folders:
-            print("No valid folders left to sample from, even after repopulation.")
+    for folder in folders:
+        if len(drawn_samples) >= num_samples:
             break
-
-        # Randomly select up to the remaining required remaining_samples from valid folders
-        remaining_num_samples = num_samples - len(drawn_samples)
-        sampled_folders = random.sample(valid_folders, min(remaining_num_samples, len(valid_folders)))
-
-        # For each folder, randomly select one method and threshold image
-        for folder in sampled_folders:
-            # Get all methods for the folder
-            methods = remaining_samples.distinct('method', {'sample': folder})
-
-            # Randomly select a method
-            selected_method = random.choice(methods)
-
-            # Get all thresholds for the selected folder and method
-            #thresholds = remaining_samples.distinct('threshold', {'sample': folder, 'method': selected_method})
-
-            # Randomly select a threshold
-            #selected_threshold = random.choice(thresholds)
-
-            # Find the specific drawn_sample and mark it as reserved
-            drawn_sample = remaining_samples.find_one_and_update(
-                {'sample': folder, 'method': selected_method, 'threshold': '0.jpg', 'reserved': {'$ne': True}},
-                {'$set': {'reserved': True}},  # Mark as reserved
-                sort=[('_id', 1)],  # Sort to ensure deterministic order
-                return_document=True  # Return the updated document
-            )
-            if drawn_sample:
-                drawn_samples.append(drawn_sample)
+        sample = random.choice(grouped_by_folder[folder])
+        drawn_samples.append(sample)
 
     return drawn_samples
-
 
 @st.cache_data
 def display_briefing() -> None:
@@ -147,65 +108,31 @@ def display_briefing() -> None:
             st.write(f'{comment}')
         st.divider() # Add a divider for better separation
 
-db = get_database()
-users_collection = db['users']
-remaining_samples = db['combinations']
-familiarities = db['familiarities']
-responses = db['responses']
-manipulation_checks = db['manipulation_checks']
-manipulation_reports = db['manipulation_reports']
-
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
-    
-# Generate a unique user ID when the survey starts
-if 'user_id' not in st.session_state:
-    while True:
-        user_id = str(uuid.uuid4())  # Generate a new UUID
-        if not responses.find_one({'user_id': user_id}):  # Check if the user ID already exists
-            st.session_state.user_id = user_id
-            break
-        
-# Update session state initialization
-if 'sampled_explanations' not in st.session_state:
-    st.session_state.sampled_explanations = []
-    drawn_samples = draw_samples(NUM_SAMPLES, remaining_samples)
-    sampled_explanations = []
-    for drawn_sample in drawn_samples:
-        sample_folder = drawn_sample['sample']
-        method = drawn_sample['method']
-        threshold = drawn_sample['threshold']
-        sampled_explanations.append({
-            'type': 'xai',
-            'object_folder': sample_folder,
-            'method': method,
-            'threshold': threshold
-        })
-        print(f"Sampled: {sample_folder}, {method}, {threshold}")
-        
-    attention_checks = random.sample(ATTENTION_CHECKS, k=NUM_CHECKS)
-    for check in attention_checks:
-        insert_index = random.randint(0, len(sampled_explanations))
-        sampled_explanations.insert(insert_index, check)
-    st.session_state.sampled_explanations = sampled_explanations
-        
-    
 # Initialize session state variables
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False 
 if 'evaluation_started' not in st.session_state:
     st.session_state.evaluation_started = False
 if 'examples_shown' not in st.session_state:
     st.session_state.examples_shown = False
 if 'current_index' not in st.session_state:
     st.session_state.current_index = 0
-# if 'responses' not in st.session_state:
-#     st.session_state.responses = []
 if 'manipulation_checks' not in st.session_state:
     st.session_state.manipulation_checks = []
 if 'ml_familiarity' not in st.session_state:
     st.session_state.ml_familiarity = None
 if 'show_warning' not in st.session_state:
     st.session_state.show_warning = False  # Flag for warning visibility
-
+if 'db' not in st.session_state:
+        st.session_state.db = get_database()
+if 'user_id' not in st.session_state:
+        while True:
+            user_id = str(uuid.uuid4())  # Generate a new UUID
+            if not st.session_state.db['responses'].find_one({'user_id': user_id}):  # Check if the user ID already exists
+                st.session_state.user_id = user_id
+                break
+            
+            
 if not st.session_state.logged_in:
     st.title("Login")  # Login UI
     st.session_state.username = st.text_input("Username")
@@ -221,7 +148,6 @@ if not st.session_state.logged_in:
         
 # Show examples before starting evaluation
 elif not st.session_state.examples_shown:
-    
     display_briefing()
     
     if st.button('Proceed to Survey'):
@@ -229,41 +155,71 @@ elif not st.session_state.examples_shown:
         st.rerun()
 
 # Initial question
-elif not st.session_state.evaluation_started:
-    familiarity_map = QUESTION_SCALE_MAP['familarity']
-    
-    # Set a default value only if not already set
-    if 'ml_familiarity' not in st.session_state:
-        st.session_state.ml_familiarity = None
-
-    # Bind radio selection directly to session state
-    selected_familiarity = st.radio(
-        familiarity_map['question'],
-        familiarity_map['scale'], 
-        index=None,
-        horizontal=True
-    )
-    
-    increase_font_size() 
-    
-    if st.button('Start Evaluation'):
-        if selected_familiarity is not None:
-            st.session_state.evaluation_started = True
-            st.session_state.ml_familiarity = selected_familiarity
-            st.session_state.timestamp = datetime.now().isoformat()
-            familiarity = {
-                'user_group': st.session_state.username,
-                'user_id': st.session_state.user_id,
-                'ml_familiarity': st.session_state.ml_familiarity,
-                'timestamp': st.session_state.timestamp
-            }
-            familiarities.insert_one(familiarity)
-            st.rerun()
-        else:
-            st.warning('Please select an answer before proceeding.')
-
 else:
-    # Display images and questions
+    #users_collection = db['users']
+    #familiarities = db['familiarities']
+    #responses = db['responses']
+    #remaining_samples = db['combinations']
+    #manipulation_checks = db['manipulation_checks']
+    #manipulation_reports = db['manipulation_reports']
+    # Generate a unique user ID when the survey starts
+
+    if not st.session_state.evaluation_started:
+        familiarity_map = QUESTION_SCALE_MAP['familarity']
+        
+        # Set a default value only if not already set
+        if 'ml_familiarity' not in st.session_state:
+            st.session_state.ml_familiarity = None
+
+        # Bind radio selection directly to session state
+        selected_familiarity = st.radio(
+            familiarity_map['question'],
+            familiarity_map['scale'], 
+            index=None,
+            horizontal=True
+        )
+        
+        increase_font_size() 
+        
+        if st.button('Start Evaluation'):
+            if selected_familiarity is not None:
+                st.session_state.evaluation_started = True
+                st.session_state.ml_familiarity = selected_familiarity
+                st.session_state.timestamp = datetime.now().isoformat()
+                familiarity = {
+                    'user_group': st.session_state.username,
+                    'user_id': st.session_state.user_id,
+                    'ml_familiarity': st.session_state.ml_familiarity,
+                    'timestamp': st.session_state.timestamp
+                }
+                st.session_state.db['familiarities'].insert_one(familiarity)
+                st.rerun()
+            else:
+                st.warning('Please select an answer before proceeding.')
+        st.stop()
+    
+    # Sample explanations if not already sampled
+    if 'sampled_explanations' not in st.session_state:
+        drawn_samples = draw_samples(NUM_SAMPLES, st.session_state.db['combinations'])
+        sampled_explanations = []
+        for drawn_sample in drawn_samples:
+            sample_folder = drawn_sample['sample']
+            method = drawn_sample['method']
+            threshold = drawn_sample['threshold']
+            sampled_explanations.append({
+                'type': 'xai',
+                'object_folder': sample_folder,
+                'method': method,
+                'threshold': threshold
+            })
+            print(f"Sampled: {sample_folder}, {method}, {threshold}")
+        
+        attention_checks = random.sample(ATTENTION_CHECKS, k=NUM_CHECKS)
+        for check in attention_checks:
+            insert_index = random.randint(0, len(sampled_explanations))
+            sampled_explanations.insert(insert_index, check)
+        st.session_state.sampled_explanations = sampled_explanations
+        
     if st.session_state.current_index < len(st.session_state.sampled_explanations):
         # Get the current drawn_sample
         drawn_sample = st.session_state.sampled_explanations[st.session_state.current_index]
@@ -302,7 +258,7 @@ else:
                     'timestamp': datetime.now().isoformat()
                 }
                 
-                manipulation_checks.insert_one(manipulation_check)
+                st.session_state.db['manipulation_checks'].insert_one(manipulation_check)
 
                 st.session_state.manipulation_checks.append(manipulation_check)
                 st.session_state.current_index += 1
@@ -365,10 +321,10 @@ else:
                     'timestamp': datetime.now().isoformat()
                 }
 
-                responses.insert_one(response)
+                st.session_state.db['responses'].insert_one(response)
 
                 # Delete the evaluated drawn_sample from the collection
-                remaining_samples.delete_one({
+                st.session_state.db['combinations'].delete_one({
                     'sample': object_folder,
                     'method': method,
                     'threshold': threshold
@@ -383,7 +339,7 @@ else:
             # Insert each manipulation check into the database
             number_checks_failed += manipulation_check.get('failed')
         
-        manipulation_reports.insert_one({
+        st.session_state.db['manipulation_reports'].insert_one({
             'user_group': st.session_state.username,
             'user_id': st.session_state.user_id,
             'indices': [mc['index'] for mc in st.session_state.manipulation_checks],
