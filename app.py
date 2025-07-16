@@ -3,7 +3,6 @@ import json
 import os
 import random
 import streamlit as st
-import sys
 import uuid
 
 from collections import defaultdict
@@ -455,4 +454,3 @@ else:
         })
         
         st.success('Evaluation completed! Results sent to MongoDB.')
-        sys.exit()
