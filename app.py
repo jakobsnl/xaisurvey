@@ -202,7 +202,7 @@ if not st.session_state.logged_in:
         st.session_state.prolific_pid = prolific_pid
         st.markdown(f"Participant ID: `{prolific_pid}`")
     else:
-        st.warning('No Prolific ID found in the URL. Please ensure you access the survey through Prolific to receive your ID.')  
+        st.warning('No Prolific ID found in the URL. Please ensure you access the survey through Prolific.')  
         
     if st.button('Login'):
         if login(st.session_state.username, st.session_state.password):  # Validate credentials
@@ -223,6 +223,7 @@ elif not st.session_state.examples_shown:
     if st.button('Proceed to Survey'):
         st.session_state.examples_shown = True
         st.session_state.db['briefings'].insert_one({
+                    'pid': st.session_state.prolific_pid,
                     'user_group': st.session_state.username,
                     'user_id': st.session_state.user_id,
                     'start': st.session_state.timestamp,
@@ -324,7 +325,7 @@ else:
                     st.session_state.show_warning = True
                     st.rerun()
                 print('check')
-                # Save the responses
+                
                 manipulation_check = {
                     'pid': st.session_state.prolific_pid,
                     'user_id': st.session_state.user_id,
@@ -356,8 +357,8 @@ else:
             explanation_path = os.path.join(IMAGE_FOLDER, object_folder, method, threshold)
             st.image(Image.open(explanation_path), use_container_width=True)
 
-            st.info("Feel free to use 'cmd +' or 'ctrl +' to zoom in on the image for better visibility.")
-            
+            st.info("Consider 'wide mode' in the settings or 'cmd +' / 'ctrl +' to zoom manually for better visibility.")
+
             st.divider() # Add a divider for better separation
             
             # Ask the alignment question and check for a valid response
@@ -492,7 +493,7 @@ else:
 
         st.markdown(f"""
         <p style="margin-bottom: 2rem;">
-            Once you've copied the code, click the link below to return to Prolific and complete your submission:
+            Once you've copied the code above, click the link below to return to Prolific and complete your submission:
         </p>
         """, unsafe_allow_html=True)
 
