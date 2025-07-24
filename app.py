@@ -9,7 +9,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from PIL import Image
 
-from config import IMAGE_FOLDER, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES, NUM_CHECKS, ATTENTION_CHECKS, RESERVATION_TIMEOUT
+from config import IMAGE_FOLDER, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES, NUM_CHECKS, ATTENTION_CHECKS, RESERVATION_TIMEOUT, PROLIFIC_URL, PROLIFIC_COMPLETION_CODE
 from get_database import get_database
 from permuation import populate_samples
 
@@ -164,6 +164,8 @@ def display_briefing() -> None:
 # Initialize session state variables
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False 
+if 'prolific_pid' not in st.session_state:
+    st.session_state.prolific_pid = None
 if 'evaluation_started' not in st.session_state:
     st.session_state.evaluation_started = False
 if 'examples_shown' not in st.session_state:
@@ -192,13 +194,23 @@ if not st.session_state.logged_in:
     st.title('Login')  # Login UI
     st.session_state.username = st.text_input('Username')
     st.session_state.password = st.text_input('Password', type='password')
+    
+    query_params = st.query_params
+    prolific_pid = query_params.get("PROLIFIC_PID")
+
+    if prolific_pid:
+        st.session_state.prolific_pid = prolific_pid
+        st.markdown(f"Participant ID: `{prolific_pid}`")
+    else:
+        st.warning('No Prolific ID found in the URL. Please ensure you access the survey through Prolific to receive your ID.')  
+        
     if st.button('Login'):
         if login(st.session_state.username, st.session_state.password):  # Validate credentials
             st.session_state.logged_in = True
             st.success('Login successful!')
             st.rerun()
         else:
-            st.error('Invalid username or password.')  # Error message for invalid credentials
+            st.error('Login details incomplete or wrong.')  # Error message for invalid credentials
         st.stop()
         
 # Show examples before starting evaluation
@@ -244,8 +256,9 @@ else:
                 st.session_state.ml_familiarity = selected_familiarity
                 st.session_state.timestamp = datetime.now().isoformat()
                 familiarity = {
-                    'user_group': st.session_state.username,
+                    'pid': st.session_state.prolific_pid,
                     'user_id': st.session_state.user_id,
+                    'user_group': st.session_state.username,
                     'ml_familiarity': st.session_state.ml_familiarity,
                     'timestamp': st.session_state.timestamp
                 }
@@ -313,6 +326,7 @@ else:
                 print('check')
                 # Save the responses
                 manipulation_check = {
+                    'pid': st.session_state.prolific_pid,
                     'user_id': st.session_state.user_id,
                     'question': drawn_sample['question'],
                     'answer': answer,
@@ -380,6 +394,7 @@ else:
                 print('xai check')
                 # Save the responses
                 response = {
+                    'pid': st.session_state.prolific_pid,
                     'user_group': st.session_state.username,
                     'user_id': st.session_state.user_id,
                     'sample': object_folder,
@@ -425,6 +440,7 @@ else:
             if self_evaluation_response is not None:
                 st.session_state.timestamp = datetime.now().isoformat()
                 self_evaluation = {
+                    'pid': st.session_state.prolific_pid,
                     'user_group': st.session_state.username,
                     'user_id': st.session_state.user_id,
                     'self_evaluation': self_evaluation_response,
@@ -446,6 +462,7 @@ else:
             number_checks_failed += manipulation_check.get('failed')
         
         st.session_state.db['manipulation_reports'].insert_one({
+            'pid': st.session_state.prolific_pid,
             'user_group': st.session_state.username,
             'user_id': st.session_state.user_id,
             'indices': [mc['index'] for mc in st.session_state.manipulation_checks],
@@ -453,4 +470,46 @@ else:
             'number_checks_failed': number_checks_failed
         })
         
-        st.success('Evaluation completed! Results sent to MongoDB.')
+        st.success('Evaluation completed! Results sent to MongoDB.')      
+
+        # Stylized completion code box (very dark grey)
+        st.markdown(f"""
+        <div style="
+            padding: 1.5rem; 
+            margin: 1.5rem 0; 
+            border-radius: 0.5rem; 
+            background-color: #1a1a1a; 
+            color: white; 
+            font-size: 22px; 
+            font-weight: bold; 
+            text-align: center;
+        ">
+            {PROLIFIC_COMPLETION_CODE}
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <p style="margin-bottom: 2rem;">
+            Once you've copied the code, click the link below to return to Prolific and complete your submission:
+        </p>
+        """, unsafe_allow_html=True)
+
+        # Prolific submission button
+        st.markdown(f"""
+        <a href="{PROLIFIC_URL}" target="_blank" style="
+            display: inline-block;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        ">
+            Submit on Prolific
+        </a>
+        """, unsafe_allow_html=True)

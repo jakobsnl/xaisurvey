@@ -1,7 +1,9 @@
 IMAGE_FOLDER = 'data'
-NUM_SAMPLES = 75 #75
+NUM_SAMPLES = 3 #75
 NUM_CHECKS = 3 #3
 RESERVATION_TIMEOUT = 20 * 60  # seconds
+PROLIFIC_URL = 'https://app.prolific.com/submissions/complete?cc=C1SGFI8Y'
+PROLIFIC_COMPLETION_CODE = 'C1SGFI8Y'
 
 ATTENTION_CHECKS = [
     {'type': 'manipulation', 'question': 'I swim across the Atlantic Ocean to get to work every day', 'correct_answers': ['Strongly Disagree', 'Disagree']},
