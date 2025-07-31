@@ -5,7 +5,7 @@ RESERVATION_TIMEOUT = 20 * 60  # seconds
 PROLIFIC_URL = 'https://app.prolific.com/submissions/complete?cc=C1SGFI8Y'
 PROLIFIC_COMPLETION_CODE = 'C1SGFI8Y'
 
-ATTENTION_CHECKS = [
+CHECKS = [
     {'type': 'manipulation', 'question': 'I swim across the Atlantic Ocean to get to work every day', 'correct_answers': ['Strongly Disagree', 'Disagree']},
     {'type': 'manipulation', 'question': 'I was born on the Moon and have never been to Earth', 'correct_answers': ['Strongly Disagree', 'Disagree']},
     {'type': 'manipulation', 'question': 'I have a pet unicorn that lives in my backyard', 'correct_answers': ['Strongly Disagree', 'Disagree']},

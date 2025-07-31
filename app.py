@@ -9,7 +9,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from PIL import Image
 
-from config import IMAGE_FOLDER, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES, NUM_CHECKS, ATTENTION_CHECKS, RESERVATION_TIMEOUT, PROLIFIC_URL, PROLIFIC_COMPLETION_CODE
+from config import IMAGE_FOLDER, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES, NUM_CHECKS, CHECKS, RESERVATION_TIMEOUT, PROLIFIC_URL, PROLIFIC_COMPLETION_CODE
 from get_database import get_database
 from permuation import populate_samples
 
@@ -187,31 +187,28 @@ if 'user_id' not in st.session_state:
             user_id = str(uuid.uuid4())  # Generate a new UUID
             if not st.session_state.db['responses'].find_one({'user_id': user_id}):  # Check if the user ID already exists
                 st.session_state.user_id = user_id
-                break
-            
-            
+                break   
+
 if not st.session_state.logged_in:
-    st.title('Login')  # Login UI
-    st.session_state.username = st.text_input('Username')
-    st.session_state.password = st.text_input('Password', type='password')
-    
     query_params = st.query_params
     prolific_pid = query_params.get("PROLIFIC_PID")
-
+    
     if prolific_pid:
         st.session_state.prolific_pid = prolific_pid
-        st.markdown(f"Participant ID: `{prolific_pid}`")
-    else:
-        st.warning('No Prolific ID found in the URL. Please ensure you access the survey through Prolific.')  
-        
-    if st.button('Login'):
-        if login(st.session_state.username, st.session_state.password):  # Validate credentials
-            st.session_state.logged_in = True
-            st.success('Login successful!')
-            st.rerun()
-        else:
-            st.error('Login details incomplete or wrong.')  # Error message for invalid credentials
-        st.stop()
+        st.session_state.logged_in = True
+    else:   
+        st.title('Login')  # Login UI
+        st.session_state.username = st.text_input('Username')
+        st.session_state.password = st.text_input('Password', type='password')
+    
+        if st.button('Login'):
+            if login(st.session_state.username, st.session_state.password):  # Validate credentials
+                st.session_state.logged_in = True
+                st.success('Login successful!')
+                st.rerun()
+            else:
+                st.error('Login details incomplete or wrong.')  # Error message for invalid credentials
+            st.stop()
         
 # Show examples before starting evaluation
 elif not st.session_state.examples_shown:
@@ -288,7 +285,7 @@ else:
             })
             print(f'Sampled: {sample_folder}, {method}, {threshold}')
         
-        attention_checks = random.sample(ATTENTION_CHECKS, k=NUM_CHECKS)
+        attention_checks = random.sample(CHECKS, k=NUM_CHECKS)
         for check in attention_checks:
             insert_index = random.randint(0, len(sampled_explanations))
             sampled_explanations.insert(insert_index, check)
