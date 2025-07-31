@@ -193,6 +193,7 @@ if not st.session_state.logged_in:
     
     if prolific_pid:
         st.session_state.prolific_pid = prolific_pid
+        st.session_state.username = 'prolific'
         st.session_state.logged_in = True
         st.rerun()
     else:   
