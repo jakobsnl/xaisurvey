@@ -1,3 +1,5 @@
 .streamlit/*
 data_raw/*
 credentials.py
+.DS_Store
+data/.DS_Store

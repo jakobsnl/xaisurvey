@@ -23,7 +23,8 @@ def populate_samples():
                 'sample': folder,
                 'method': method,
                 'threshold': '0.jpg',
-                'used': False  # Mark as unused initially
+                'used': False  # Mark as unused initially,
+                
             })
 
     # Insert all combinations into MongoDB

@@ -35,6 +35,10 @@ def login(username, password) -> bool:
 
 
 def draw_samples(num_samples, session_state) -> list:
+    """
+    Draw random samples from the database, reserving them for the user.
+    Curently limited to the number of distinct samples in the database (75). To be fixed.
+    """
     remaining_samples = session_state.db['combinations']
     now = datetime.now()
     
@@ -58,9 +62,6 @@ def draw_samples(num_samples, session_state) -> list:
     folders = list(grouped_by_folder.keys())
     random.shuffle(folders)
     drawn_samples = []
-    
-    if len(folders) < NUM_SAMPLES:
-        populate_samples() 
         
     for folder in folders:
         if len(drawn_samples) >= num_samples:
@@ -298,6 +299,29 @@ else:
         
         # Count how many XAI samples are left (excluding attention checks)
         if drawn_sample.get('type') != 'xai':
+            st.markdown(f'### Sample {st.session_state.current_index + 1} of {len(st.session_state.sampled_explanations)}')
+            st.divider() # Add a divider for better separation
+            
+            # Get path of random example image
+            explanation_path = EXAMPLE_IMAGES[list(EXAMPLE_IMAGES.keys())[st.session_state.current_index % len(EXAMPLE_IMAGES)]][st.session_state.current_index % 2][0] 
+            st.image(Image.open(explanation_path), use_container_width=True)
+
+            st.info("Consider: Select a random answer for the first question and read the 2nd question carefully.")
+            st.divider() # Add a divider for better separation
+            
+            # Dummy
+            alignment = None
+            alignment_map = QUESTION_SCALE_MAP['alignment']
+            alignment = st.radio(
+                alignment_map['question'] + ' (this is an attention check, select anything)',
+                alignment_map['scale'],
+                index=None, 
+                key=f'xai_alignment_{st.session_state.current_index}',
+                horizontal=True
+            )
+            
+            st.divider() # Add a divider for better separation
+            
             if drawn_sample.get('type') == 'manipulation':
                 st.markdown('**Please indicate your agreement with the statements below**')
                 answer = st.radio(
@@ -314,11 +338,12 @@ else:
                     'Based on the text you read above, what colour have you been asked to enter?',
                     ['Red', 'Blue', 'Green', 'Orange', 'Brown'],
                     index=None,
-                    key=f'attention_{st.session_state.current_index}'
+                    key=f'attention_{st.session_state.current_index}',
+                    horizontal=True
                 )
-            
+                
             if st.button('Next'):
-                if answer is None:
+                if answer is None or alignment is None:
                     st.session_state.show_warning = True
                     st.rerun()
                 print('check')
@@ -344,7 +369,7 @@ else:
             if st.session_state.show_warning:
                 st.warning('Please select an answer to continue.')
         else:
-            st.markdown(f'### Sample {st.session_state.current_sample_count} of {NUM_SAMPLES}')
+            st.markdown(f'### Sample {st.session_state.current_index + 1} of {len(st.session_state.sampled_explanations)}')
             st.divider() # Add a divider for better separation
             
             object_folder = drawn_sample['object_folder']
