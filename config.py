@@ -3,92 +3,6 @@ NUM_SAMPLES = 2 # max: len(data)=75, as the setup is built for users seeing each
 NUM_CHECKS = 2
 NUM_EXTRA_CHECKS = 2
 RESERVATION_TIMEOUT = 20 * 60  # seconds
-CHECKS = [
-    {
-        'type': 'attention', 
-        'question': "This is a manipulation check, please select '1 - Not at all' for this question.",
-        'correct_answers': ['1 - Not at all'],
-        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
-    },
-    {
-        'type': 'attention', 
-        'question': "This is a manipulation check, please select '2' for this question.",
-        'correct_answers': ['2'],
-        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
-    },
-    {
-        'type':'attention', 
-        'question': "This is a manipulation check, please select '3' for this question.",
-        'correct_answers': ['3'],
-        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
-    },
-    {
-        'type': 'attention', 
-        'question': "This is a manipulation check, please select '4' for this question.",  
-        'correct_answers': ['4'],
-        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
-    },
-    {
-        'type': 'attention', 
-        'question': "This is a manipulation check, please select '5 - Perfectly aligned' for this question.",
-        'correct_answers': ['5 - Perfectly aligned'],
-        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
-    },
-    {
-        'type': 'attention_note',
-        'note': "The test you are about to take part in is very simple, when asked for a score you must select '1 - Not at all'.",
-        'question': 'Based on the text you read above, what score have you been asked to enter?',
-        'correct_answers': ['1 - Not at all'],
-        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
-    },
-    {
-        'type': 'attention_note',
-        'note': "The test you are about to take part in is very simple, when asked for a score you must select '2'.",
-        'question': 'Based on the text you read above, what score have you been asked to enter?',
-        'correct_answers': ['2'],
-        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
-    },
-    {
-        'type': 'attention_note',
-        'note': "The test you are about to take part in is very simple, when asked for a score you must select '3'.",
-        'question': 'Based on the text you read above, what score have you been asked to enter?',
-        'correct_answers': ['3'],
-        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
-    },
-    {
-        'type': 'attention_note',
-        'note': "The test you are about to take part in is very simple, when asked for a score you must select '4'.",
-        'question': 'Based on the text you read above, what score have you been asked to enter?',
-        'correct_answers': ['4'],
-        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
-    },
-    {
-        'type': 'attention_note',
-        'note': "The test you are about to take part in is very simple, when asked for a score you must select '5 - Perfectly aligned'.",
-        'question': 'Based on the text you read above, what score have you been asked to enter?',
-        'correct_answers': ['5 - Perfectly aligned'],
-        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
-    }
-]
-
-QUESTION_SCALE_MAP = {
-    'familarity': {
-        'question': 'How familiar are you with Machine Learning and concepts of Artificial Intelligence?',
-        'scale': ['Not familiar', 'Somewhat familiar', 'Very familiar']
-    },
-    'alignment': {
-        'question': 'To what degree does the importance map (right) align with the classified object bordered in green (left)?',
-        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
-    },
-    'relevance': {
-        'question': 'Does the importance map not related to the green-highlighted object appear meaningful for classifying the image?',
-        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
-    },
-    'self_evaluation': {
-        'question': 'Considering your level of focus/ distraction thoughout this survey: What is the quality of the data provided by you?',
-        'scale': ['1 - Very bad', '2 - Bad', '3 - Okay', '4 - Good', '5 - Very good']
-    },
-}
 
 EXAMPLE_IMAGES = {
     'DeepLift': [
@@ -108,3 +22,109 @@ EXAMPLE_IMAGES = {
         ('assets/n01695060/LRP_EpsilonAlpha2Beta1/0.jpg', 'Same here.')
     ]     
 }
+
+QUESTION_SCALE_MAP = {
+    'familiarity': {
+        'ml':{
+            'question': 'How familiar are you with Machine Learning and concepts of Artificial Intelligence?',
+            'scale': ['Not familiar', 'Somewhat familiar', 'Very familiar']
+        },
+        'xai':{
+            'question': 'How familiar are you with Explainable AI (XAI) methods and concepts?',
+            'scale': ['Not familiar', 'Somewhat familiar', 'Very familiar']
+        }
+    },
+    'alignment': {
+        'question': 'To what degree does the importance map (right) align with the classified object bordered in green (left)?',
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
+    },
+    'relevance': {
+        'question': 'Does the importance map not related to the green-highlighted object appear meaningful for classifying the image?',
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
+    },
+    'self_evaluation': {
+        'question': 'Considering your level of focus/ distraction thoughout this survey: What is the quality of the data provided by you?',
+        'scale': ['1 - Very bad', '2 - Bad', '3 - Okay', '4 - Good', '5 - Very good']
+    },
+}
+
+CHECKS = [
+    {
+        'type': 'attention', 
+        'question': "This is a manipulation check. Please choose the response ‘1 – Not at all’ for this item to show you are following the instructions.",
+        'correct_answers': ['1 - Not at all'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
+    },
+    {
+        'type': 'attention', 
+        'question': "This is a manipulation check. Please choose the response ‘2’ for this item to show you are following the instructions.",
+        'correct_answers': ['2'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
+    },
+    {
+        'type':'attention', 
+        'question': "This is a manipulation check. Please choose the response ‘3’ for this item to show you are following the instructions.",
+        'correct_answers': ['3'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
+    },
+    {
+        'type': 'attention', 
+        'question': "This is a manipulation check. Please choose the response ‘4’ for this item to show you are following the instructions.",
+        'correct_answers': ['4'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
+    },
+    {
+        'type': 'attention', 
+        'question': "This is a manipulation check. Please choose the response ‘5 - Perfectly meaningful' for this item to show you are following the instructions.",
+        'correct_answers': ['5 - Perfectly meaningful'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
+    },
+    {
+        'type': 'attention', 
+        'question': "This is a manipulation check. Please choose the response 'The importance map is perfectly aligned' for this item to show you are following the instructions.",
+        'correct_answers': ['The importance map is perfectly aligned'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
+    },
+    {
+        'type': 'attention_note',
+        'note': "The test you’re about to take is simple. When asked for a score you must select '1 - Not at all'.",
+        'question': 'Based on the text you read above, what score have you been asked to enter?',
+        'correct_answers': ['1 - Not at all'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
+    },
+    {
+        'type': 'attention_note',
+        'note': "The test you’re about to take is simple. When asked for a score you must select '2'.",
+        'question': 'Based on the text you read above, what score have you been asked to enter?',
+        'correct_answers': ['2'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
+    },
+    {
+        'type': 'attention_note',
+        'note': "The test you’re about to take is simple. When asked for a score you must select '3'.",
+        'question': 'Based on the text you read above, what score have you been asked to enter?',
+        'correct_answers': ['3'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
+    },
+    {
+        'type': 'attention_note',
+        'note': "The test you’re about to take is simple. When asked for a score you must select '4'.",
+        'question': 'Based on the text you read above, what score have you been asked to enter?',
+        'correct_answers': ['4'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
+    },
+    {
+        'type': 'attention_note',
+        'note': "The test you’re about to take is simple. When asked for a score you must select '5 - Perfectly meaningful'.",
+        'question': 'Based on the text you read above, what score have you been asked to enter?',
+        'correct_answers': ['5 - Perfectly meaningful'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
+    },
+    {
+        'type': 'attention_note',
+        'note': "The test you’re about to take is simple. When asked for a score you must select 'The importance map is perfectly aligned'.",
+        'question': 'Based on the text you read above, what score have you been asked to enter?',
+        'correct_answers': ['The importance map is perfectly aligned'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly meaningful', 'The importance map is perfectly aligned']
+    }
+]
