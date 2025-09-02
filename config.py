@@ -1,22 +1,74 @@
 IMAGE_FOLDER = 'data'
-NUM_SAMPLES = 75 #75
-NUM_CHECKS = 3 #3
+NUM_SAMPLES = 2 # max: len(data)=75, as the setup is built for users seeing each sample once
+NUM_CHECKS = 2
+NUM_EXTRA_CHECKS = 2
 RESERVATION_TIMEOUT = 20 * 60  # seconds
-PROLIFIC_URL = 'https://app.prolific.com/submissions/complete?cc=C1SGFI8Y'
-PROLIFIC_COMPLETION_CODE = 'C1SGFI8Y'
-
 CHECKS = [
-    {'type': 'manipulation', 'question': 'I swim across the Atlantic Ocean to get to work every day', 'correct_answers': ['Strongly Disagree', 'Disagree']},
-    {'type': 'manipulation', 'question': 'I was born on the Moon and have never been to Earth', 'correct_answers': ['Strongly Disagree', 'Disagree']},
-    {'type': 'manipulation', 'question': 'I have a pet unicorn that lives in my backyard', 'correct_answers': ['Strongly Disagree', 'Disagree']},
-    {'type': 'manipulation', 'question': 'I can teleport to any place in the world instantly', 'correct_answers': ['Strongly Disagree', 'Disagree']},
-    {'type': 'manipulation', 'question': 'I have a superpower that allows me to fly like a bird', 'correct_answers': ['Strongly Disagree', 'Disagree']},
-    {'type': 'attention', 'question': "The colour test you are about to take part in is very simple, when asked for your favourite colour you must select 'Green'.", 'correct_answers': ['Green']},
-    {'type': 'attention', 'question': "The colour test you are about to take part in is very simple, when asked for your favourite colour you must select 'Orange'.", 'correct_answers': ['Orange']},
-    {'type': 'attention', 'question': "The colour test you are about to take part in is very simple, when asked for your favourite colour you must select 'Blue'.", 'correct_answers': ['Blue']},
-    {'type': 'attention', 'question': "The colour test you are about to take part in is very simple, when asked for your favourite colour you must select 'Red'.", 'correct_answers': ['Red']},
-    {'type': 'attention', 'question': "The colour test you are about to take part in is very simple, when asked for your favourite colour you must select 'Brown'.", 'correct_answers': ['Brown']},
-    # Add more if needed
+    {
+        'type': 'attention', 
+        'question': "This is a manipulation check, please select '1 - Not at all' for this question.",
+        'correct_answers': ['1 - Not at all'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
+    },
+    {
+        'type': 'attention', 
+        'question': "This is a manipulation check, please select '2' for this question.",
+        'correct_answers': ['2'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
+    },
+    {
+        'type':'attention', 
+        'question': "This is a manipulation check, please select '3' for this question.",
+        'correct_answers': ['3'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
+    },
+    {
+        'type': 'attention', 
+        'question': "This is a manipulation check, please select '4' for this question.",  
+        'correct_answers': ['4'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
+    },
+    {
+        'type': 'attention', 
+        'question': "This is a manipulation check, please select '5 - Perfectly aligned' for this question.",
+        'correct_answers': ['5 - Perfectly aligned'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
+    },
+    {
+        'type': 'attention_note',
+        'note': "The test you are about to take part in is very simple, when asked for a score you must select '1 - Not at all'.",
+        'question': 'Based on the text you read above, what score have you been asked to enter?',
+        'correct_answers': ['1 - Not at all'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
+    },
+    {
+        'type': 'attention_note',
+        'note': "The test you are about to take part in is very simple, when asked for a score you must select '2'.",
+        'question': 'Based on the text you read above, what score have you been asked to enter?',
+        'correct_answers': ['2'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
+    },
+    {
+        'type': 'attention_note',
+        'note': "The test you are about to take part in is very simple, when asked for a score you must select '3'.",
+        'question': 'Based on the text you read above, what score have you been asked to enter?',
+        'correct_answers': ['3'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
+    },
+    {
+        'type': 'attention_note',
+        'note': "The test you are about to take part in is very simple, when asked for a score you must select '4'.",
+        'question': 'Based on the text you read above, what score have you been asked to enter?',
+        'correct_answers': ['4'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
+    },
+    {
+        'type': 'attention_note',
+        'note': "The test you are about to take part in is very simple, when asked for a score you must select '5 - Perfectly aligned'.",
+        'question': 'Based on the text you read above, what score have you been asked to enter?',
+        'correct_answers': ['5 - Perfectly aligned'],
+        'scale': ['1 - Not at all', '2', '3', '4', '5 - Perfectly aligned']
+    }
 ]
 
 QUESTION_SCALE_MAP = {

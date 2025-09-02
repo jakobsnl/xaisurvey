@@ -3,13 +3,14 @@ import random
 import streamlit as st
 import uuid
 
-from collections import defaultdict
+from collections import Counter
 from datetime import datetime, timedelta
 from PIL import Image
+from pymongo import ReturnDocument
 
-from config import IMAGE_FOLDER, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES, NUM_CHECKS, CHECKS, RESERVATION_TIMEOUT, PROLIFIC_URL, PROLIFIC_COMPLETION_CODE
+from config import IMAGE_FOLDER, NUM_SAMPLES, QUESTION_SCALE_MAP, EXAMPLE_IMAGES, NUM_CHECKS, NUM_EXTRA_CHECKS, CHECKS, RESERVATION_TIMEOUT
 from get_database import get_database
-from permuation import populate_samples
+
 
 def increase_font_size() -> None:
     """
@@ -34,62 +35,84 @@ def login(username, password) -> bool:
     return False
 
 
-def draw_samples(num_samples, session_state) -> list:
+def draw_samples(session_state) -> list:
     """
-    Draw random samples from the database, reserving them for the user.
-    Curently limited to the number of distinct samples in the database (75). To be fixed.
+    Draw balanced samples from the database, reserving them for the user.
+    - Ensures global fairness: every folder–method combo is forced toward equal count.
+    - Guarantees exactly NUM_SAMPLES distinct folders.
+    - Uses reservation scheme with expiry.
     """
-    remaining_samples = session_state.db['combinations']
-    now = datetime.now()
-    
-    def get_available_samples():
-        return list(remaining_samples.find({
-            '$or': [
-                {'reserved_until': {'$exists': False}}, 
-                {'reserved_until': {'$lt': now.isoformat()}}
-            ]
-        }))
-    
-    all_samples = get_available_samples()
-    if len(all_samples) == 0:
-        populate_samples()
-        all_samples = get_available_samples()  # Try again
-        
-    grouped_by_folder = defaultdict(list)
-    for sample in all_samples:
-        grouped_by_folder[sample['sample']].append(sample)
 
-    folders = list(grouped_by_folder.keys())
-    random.shuffle(folders)
+    all_samples = session_state.db['combinations']
+    now = datetime.now()
+
+    # helper: get samples at given count, excluding reserved
+    def get_available_samples(count, folder=None):
+        query = {
+            "count": count,
+            "$or": [
+                {"reserved_until": {"$exists": False}},
+                {"reserved_until": {"$lt": now.isoformat()}},
+            ]
+        }
+        if folder is not None:
+            query["sample"] = folder
+        return list(all_samples.find(query))
+
+    # Determine current global min count
+    global_min_sample_count = all_samples.find_one(sort=[("count", 1)])['count']
+
+    # Pick NUM_SAMPLES distinct folders
+    all_folders = all_samples.distinct("sample")
+    if len(all_folders) < NUM_SAMPLES:
+        raise RuntimeError("Not enough distinct folders to draw from!")
+
+    random.shuffle(all_folders)
+    selected_folders = all_folders[:NUM_SAMPLES]
+
     drawn_samples = []
-        
-    for folder in folders:
-        if len(drawn_samples) >= num_samples:
-            break
-        
-        sample = random.choice(grouped_by_folder[folder])
-        reservation_expiry = now + timedelta(seconds=RESERVATION_TIMEOUT)
-        result = remaining_samples.update_one(
-            {
-                '_id': sample['_id'],
-                '$or': [
-                    {'reserved_until': {'$exists': False}},
-                    {'reserved_until': {'$lt': now.isoformat()}}
-                ]
-            },
-            {'$set': {'reserved_until': reservation_expiry.isoformat()}}
-        )
-        
-        if result.modified_count == 1:
-            # reservation successful, add to drawn samples
-            drawn_samples.append(sample)
-        else:
-            # reservation not successful, skip this sample
-            continue
-        
-    assert len(drawn_samples) == NUM_SAMPLES
-    print(f'Sampled {len(drawn_samples)} explanations')
+
+    # For each folder, enforce fairness
+    for folder in selected_folders:
+        result = None
+        while result is None:
+            min_sample_count = global_min_sample_count
+            available = []
+            while not available:
+                available = get_available_samples(min_sample_count, folder)
+                if available:
+                    break
+                min_sample_count += 1
+
+            # pick one method randomly from this folder
+            min_methods_seen = min([st.session_state.method_count[m['method']] for m in available])
+            candidates = [m for m in available if st.session_state.method_count[m['method']] == min_methods_seen]
+
+            sample = random.choice(candidates)
+
+            reservation_expiry = now + timedelta(seconds=RESERVATION_TIMEOUT)
+            result = all_samples.find_one_and_update(
+                {
+                    "_id": sample["_id"],
+                    "$or": [
+                        {"reserved_until": {"$exists": False}},
+                        {"reserved_until": {"$lt": now.isoformat()}},
+                    ],
+                },
+                {"$set": {"reserved_until": reservation_expiry.isoformat()}},
+                return_document=ReturnDocument.AFTER,
+            )
+
+            if result:
+                drawn_samples.append(result)
+                st.session_state.method_count[sample['method']] += 1
+
+    assert len(drawn_samples) == NUM_SAMPLES, (
+        f"Expected {NUM_SAMPLES}, got {len(drawn_samples)}"
+    )
+    print(f"Sampled {len(drawn_samples)} explanations")
     return drawn_samples
+
 
 
 @st.cache_data
@@ -169,6 +192,8 @@ if 'evaluation_started' not in st.session_state:
     st.session_state.evaluation_started = False
 if 'examples_shown' not in st.session_state:
     st.session_state.examples_shown = False
+if 'method_count' not in st.session_state:
+    st.session_state.method_count = Counter()  # Track how many times each method has been shown
 if 'current_index' not in st.session_state:
     st.session_state.current_index = 0
 if 'current_sample_count' not in st.session_state:
@@ -272,7 +297,7 @@ else:
     
     # Sample explanations if not already sampled
     if 'sampled_explanations' not in st.session_state:
-        drawn_samples = draw_samples(NUM_SAMPLES, st.session_state)
+        drawn_samples = draw_samples(st.session_state)
         sampled_explanations = []
         for drawn_sample in drawn_samples:
             sample_folder = drawn_sample['sample']
@@ -285,9 +310,11 @@ else:
                 'threshold': threshold
             })
             print(f'Sampled: {sample_folder}, {method}, {threshold}')
+
+        attention_checks = random.sample(CHECKS[:5], k=NUM_CHECKS)
+        attention_checks_extra = random.sample(CHECKS[5:], k=NUM_EXTRA_CHECKS)
         
-        attention_checks = random.sample(CHECKS, k=NUM_CHECKS)
-        for check in attention_checks:
+        for check in [*attention_checks, *attention_checks_extra]:
             insert_index = random.randint(0, len(sampled_explanations))
             sampled_explanations.insert(insert_index, check)
         st.session_state.sampled_explanations = sampled_explanations
@@ -306,14 +333,14 @@ else:
             explanation_path = EXAMPLE_IMAGES[list(EXAMPLE_IMAGES.keys())[st.session_state.current_index % len(EXAMPLE_IMAGES)]][st.session_state.current_index % 2][0] 
             st.image(Image.open(explanation_path), use_container_width=True)
 
-            st.info("Consider: Select a random answer for the first question and read the 2nd question carefully.")
+            st.info("Consider 'wide mode' in the settings or 'cmd +' / 'ctrl +' to zoom manually for better visibility.")
             st.divider() # Add a divider for better separation
             
             # Dummy
             alignment = None
             alignment_map = QUESTION_SCALE_MAP['alignment']
             alignment = st.radio(
-                alignment_map['question'] + ' (this is an attention check, select anything)',
+                alignment_map['question'],
                 alignment_map['scale'],
                 index=None, 
                 key=f'xai_alignment_{st.session_state.current_index}',
@@ -322,31 +349,31 @@ else:
             
             st.divider() # Add a divider for better separation
             
-            if drawn_sample.get('type') == 'manipulation':
-                st.markdown('**Please indicate your agreement with the statements below**')
+            if drawn_sample.get('type') == 'attention':
                 answer = st.radio(
                     drawn_sample['question'],
-                    ['Strongly Disagree', 'Disagree', 'Agree', 'Strongly Agree'],
+                    drawn_sample['scale'],
                     index=None,
-                    key=f"manipulation_{st.session_state.current_index}",
+                    key=f"attention_{st.session_state.current_index}",
                     horizontal=True
                 )
 
-            elif drawn_sample.get('type') == 'attention':
-                st.markdown(f"**{drawn_sample['question']}**")
+            elif drawn_sample.get('type') == 'attention_note':
+                st.markdown(f"**{drawn_sample['note']}**")
                 answer = st.radio(
-                    'Based on the text you read above, what colour have you been asked to enter?',
-                    ['Red', 'Blue', 'Green', 'Orange', 'Brown'],
+                    drawn_sample['question'],
+                    drawn_sample['scale'],
                     index=None,
-                    key=f'attention_{st.session_state.current_index}',
+                    key=f'attention_note_{st.session_state.current_index}',
                     horizontal=True
                 )
+            
+            increase_font_size()
                 
             if st.button('Next'):
                 if answer is None or alignment is None:
                     st.session_state.show_warning = True
                     st.rerun()
-                print('check')
                 
                 manipulation_check = {
                     'pid': st.session_state.prolific_pid,
@@ -414,7 +441,7 @@ else:
                 if alignment is None or relevance is None:
                     st.session_state.show_warning = True
                     st.rerun()
-                print('xai check')
+                    
                 # Save the responses
                 response = {
                     'pid': st.session_state.prolific_pid,
@@ -430,12 +457,18 @@ else:
 
                 st.session_state.db['responses'].insert_one(response)
 
-                # Delete the evaluated drawn_sample from the collection
-                st.session_state.db['combinations'].delete_one({
-                    'sample': object_folder,
-                    'method': method,
-                    'threshold': threshold
-                })
+                # Increase the evaluated drawn_sample from the collection + erase reservation
+                st.session_state.db['combinations'].update_one(
+                    {
+                        'sample': object_folder,
+                        'method': method,
+                        'threshold': threshold
+                    },
+                    {
+                        '$inc': {'times_shown': 1},
+                        '$set': {'reserved_until': None}
+                    }
+                )
             
                 st.session_state.current_index += 1
                 st.session_state.current_sample_count += 1
@@ -507,7 +540,7 @@ else:
             font-weight: bold; 
             text-align: center;
         ">
-            {PROLIFIC_COMPLETION_CODE}
+            {st.secrets.prolific['COMPLETION_CODE']}
         </div>
         """, unsafe_allow_html=True)
         
@@ -521,7 +554,7 @@ else:
 
         # Prolific submission button
         st.markdown(f"""
-        <a href="{PROLIFIC_URL}" target="_blank" style="
+        <a href="{st.secrets.prolific['URL']}" target="_blank" style="
             display: inline-block;
             font-size: 16px;
             font-weight: 600;
@@ -536,3 +569,6 @@ else:
             Submit on Prolific
         </a>
         """, unsafe_allow_html=True)
+        
+        
+        
