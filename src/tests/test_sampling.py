@@ -3,12 +3,12 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 from tqdm import tqdm
 
+
 NUM_IMAGES = 75
 NUM_METHODS = 12
 NUM_SAMPLES = 75
 NUM_PARTICIPANTS = 200
 RESERVATION_TIMEOUT = 60
-
 
 # --- Mock DB entry structure ---
 class MockCollection:

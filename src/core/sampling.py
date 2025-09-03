@@ -6,6 +6,7 @@ from pymongo import ReturnDocument
 
 from config import CHECKS, NUM_SAMPLES, RESERVATION_TIMEOUT, NUM_CHECKS, NUM_EXTRA_CHECKS
 
+
 def draw_explanations(session_state) -> list:
     """
     Draw balanced explanations from the database, reserving them for the user.

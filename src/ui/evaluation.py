@@ -1,8 +1,7 @@
 import streamlit as st
 import os
+
 from PIL import Image
-
-
 from datetime import datetime
 
 from config import QUESTION_SCALE_MAP, EXAMPLE_IMAGES, IMAGE_FOLDER
