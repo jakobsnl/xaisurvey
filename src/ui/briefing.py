@@ -48,7 +48,7 @@ def display_briefing() -> None:
     We want them to give you the following intuition:
     The shape/ style of different importance maps depends heavily on the method.
     As a consequence, an ideal importance map looks by nature different for each method. 
-    There are cases, where two methods can perfecty explain the model, yet their importance maps look very different in shape/ style.
+    There are cases, where two methods can perfectly explain the model, yet their importance maps look very different in shape/ style.
     
     Make yourself familiar with the different methods and their resulting explanation shape/ style by looking at the examples below. Afterwards, proceed to the survey."""
 
@@ -67,8 +67,8 @@ def display_briefing() -> None:
     st.markdown("""
     **General things to keep in mind:**
     
-    The scope of this survey is to evaluate the perceptual alignment of explanations with the ground truth object. Ask yourself, if you perceive the explanation is relevant for your understanding of the model's decision.
+    The scope of this survey is to evaluate the perceptual alignment of explanations with the ground truth object. Ask yourself if you perceive the explanation is relevant for your understanding of the model's decision.
     Here are some examples, that might help to understand what this means better:
-    - Relevance maps are highlighting regions in 2D space. If e.g. an object is in the background of the image, covered by a see-through object like a fence, simply ask yourself, if your attention is drawn to the **ground truth** object, or if you are confused by the forground object (e.g. fence). If you are distracted, the explanation may not be perfectly aligned with the **ground truth** and vice versa
+    - Relevance maps are highlighting regions in 2D space. If e.g. an object is in the background of the image, covered by a see-through object like a fence, simply ask yourself, if your attention is drawn to the **ground truth** object, or if you are confused by the foreground object (e.g. fence). If you are distracted, the explanation may not be perfectly aligned with the **ground truth** and vice versa
     - Sometimes the relevance map only highlights parts of the **ground truth** object. Again, the score you assign depends on how well the explanation leads your attention to the **ground truth** or not, and not strictly on how well the explanation covers the **ground truth** object
     """)

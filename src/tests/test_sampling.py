@@ -92,7 +92,7 @@ def draw_samples(session_state) -> list:
             query['sample'] = folder
         return list(all_samples.find(query))
 
-    global_min = all_samples.find_one(sort=[('times_shown', 1)])['times_shown']
+    global_min = all_samples.find_one()['times_shown']
 
     all_folders = all_samples.distinct('sample')
     if len(all_folders) < NUM_SAMPLES:
