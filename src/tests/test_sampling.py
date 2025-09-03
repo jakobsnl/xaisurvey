@@ -1,5 +1,5 @@
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 from collections import defaultdict
 from tqdm import tqdm
 
@@ -69,7 +69,7 @@ class SessionState:
 # --- Draw samples function ---
 def draw_samples(session_state) -> list:
     all_samples = session_state.db['combinations']
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
 
     def get_available_samples(count, folder=None) -> list:
         query = {

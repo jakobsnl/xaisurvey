@@ -1,6 +1,6 @@
 import streamlit as st
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ui.styling import increase_font_size
 from config import QUESTION_SCALE_MAP
@@ -43,7 +43,7 @@ def familiarity_check() -> None:
     if st.button('Start Evaluation'):
         if st.session_state.ml_familiarity is not None and st.session_state.xai_familiarity is not None:
             st.session_state.evaluation_started = True
-            st.session_state.timestamp = datetime.now().isoformat()
+            st.session_state.timestamp = datetime.now(timezone.utc).isoformat()
             familiarity = {
                 'pid': st.session_state.prolific_pid,
                 'user_id': st.session_state.user_id,

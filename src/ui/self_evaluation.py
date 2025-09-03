@@ -1,6 +1,6 @@
 import streamlit as st
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from config import QUESTION_SCALE_MAP
 from ui.styling import increase_font_size, insufficient_answer_warning
@@ -22,7 +22,7 @@ def self_evaluation() -> None:
     # Once submit button to store the response is clicked
     if st.button('Submit Survey'):
         if self_evaluation_response is not None:
-            st.session_state.timestamp = datetime.now().isoformat()
+            st.session_state.timestamp = datetime.now(timezone.utc).isoformat()
             self_evaluation = {
                 'pid': st.session_state.prolific_pid,
                 'user_group': st.session_state.username,

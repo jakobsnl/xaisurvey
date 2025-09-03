@@ -2,7 +2,7 @@ import streamlit as st
 import os
 
 from PIL import Image
-from datetime import datetime
+from datetime import datetime, timezone
 
 from config import QUESTION_SCALE_MAP, EXAMPLE_IMAGES, IMAGE_FOLDER
 from ui.styling import increase_font_size, insufficient_answer_warning
@@ -99,7 +99,7 @@ def evaluate_check(drawn_sample) -> None:
             'failed':
             0 if answer in drawn_sample.get('correct_answers') else 1,
             'index': st.session_state.current_index,
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         }
         st.session_state.db['manipulation_checks'].insert_one(
             manipulation_check)
@@ -196,7 +196,7 @@ def evaluate_explanation(drawn_sample: dict) -> None:
             'threshold': threshold.split('.')[0],
             'alignment': alignment,
             'relevance': relevance,
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         }
 
         # Store the response in the database

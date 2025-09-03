@@ -1,7 +1,7 @@
 import random
 import streamlit as st
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pymongo import ReturnDocument
 
 from config import CHECKS, NUM_SAMPLES, RESERVATION_TIMEOUT, NUM_CHECKS, NUM_EXTRA_CHECKS
@@ -16,7 +16,7 @@ def draw_explanations(session_state) -> list:
     """
 
     all_explanations = session_state.db['combinations']
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
 
     # helper: get explanations at given count, excluding reserved
     def get_available_explanations(count, folder=None) -> list:

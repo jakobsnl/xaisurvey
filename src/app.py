@@ -1,6 +1,6 @@
 import streamlit as st
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ui.briefing import display_briefing
 from ui.completion import completion
@@ -21,7 +21,7 @@ if not st.session_state.logged_in:
 # Show examples before starting evaluation
 elif not st.session_state.examples_shown:
     if 'timestamp' not in st.session_state:
-        st.session_state.timestamp = datetime.now()
+        st.session_state.timestamp = datetime.now(timezone.utc).isoformat()
 
     # Display the briefing text to the user
     display_briefing()
@@ -42,7 +42,7 @@ elif not st.session_state.examples_shown:
             'start':
             st.session_state.timestamp,
             'end':
-            datetime.now().isoformat()
+            datetime.now(timezone.utc).isoformat()
         })
         st.rerun()
 else:
