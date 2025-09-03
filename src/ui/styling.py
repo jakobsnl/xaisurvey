@@ -5,16 +5,15 @@ def increase_font_size() -> None:
     """
     Increases the font size of radio titles in the Streamlit app.
     """
-    st.markdown(
-            """
+    st.markdown("""
             <style>
             div[class*="stRadio"] > label > div[data-testid="stMarkdownContainer"] > p {
             font-size: 18px;
             }
             </style>
-            """, 
-            unsafe_allow_html=True)
-    
+            """,
+                unsafe_allow_html=True)
+
 
 def insufficient_answer_warning() -> None:
     """

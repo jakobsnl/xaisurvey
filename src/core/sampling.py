@@ -19,12 +19,21 @@ def draw_explanations(session_state) -> list:
     now = datetime.now()
 
     # helper: get explanations at given count, excluding reserved
-    def get_available_explanations(count, folder=None):
+    def get_available_explanations(count, folder=None) -> list:
         query = {
-            "count": count,
+            "count":
+            count,
             "$or": [
-                {"reserved_until": {"$exists": False}},
-                {"reserved_until": {"$lt": now.isoformat()}},
+                {
+                    "reserved_until": {
+                        "$exists": False
+                    }
+                },
+                {
+                    "reserved_until": {
+                        "$lt": now.isoformat()
+                    }
+                },
             ]
         }
         if folder is not None:
@@ -32,7 +41,8 @@ def draw_explanations(session_state) -> list:
         return list(all_explanations.find(query))
 
     # Determine current global min count
-    global_min_sample_count = all_explanations.find_one(sort=[("count", 1)])['count']
+    global_min_sample_count = all_explanations.find_one(sort=[("count",
+                                                               1)])['count']
 
     # Pick NUM_SAMPLES distinct folders
     all_folders = all_explanations.distinct("sample")
@@ -51,27 +61,44 @@ def draw_explanations(session_state) -> list:
             min_sample_count = global_min_sample_count
             available = []
             while not available:
-                available = get_available_explanations(min_sample_count, folder)
+                available = get_available_explanations(min_sample_count,
+                                                       folder)
                 if available:
                     break
                 min_sample_count += 1
 
             # pick one method randomly from this folder
-            min_methods_seen = min([st.session_state.method_count[m['method']] for m in available])
-            candidates = [m for m in available if st.session_state.method_count[m['method']] == min_methods_seen]
+            min_methods_seen = min([
+                st.session_state.method_count[m['method']] for m in available
+            ])
+            candidates = [
+                m for m in available if st.session_state.method_count[
+                    m['method']] == min_methods_seen
+            ]
 
             sample = random.choice(candidates)
 
             reservation_expiry = now + timedelta(seconds=RESERVATION_TIMEOUT)
             result = all_explanations.find_one_and_update(
                 {
-                    "_id": sample["_id"],
+                    "_id":
+                    sample["_id"],
                     "$or": [
-                        {"reserved_until": {"$exists": False}},
-                        {"reserved_until": {"$lt": now.isoformat()}},
+                        {
+                            "reserved_until": {
+                                "$exists": False
+                            }
+                        },
+                        {
+                            "reserved_until": {
+                                "$lt": now.isoformat()
+                            }
+                        },
                     ],
                 },
-                {"$set": {"reserved_until": reservation_expiry.isoformat()}},
+                {"$set": {
+                    "reserved_until": reservation_expiry.isoformat()
+                }},
                 return_document=ReturnDocument.AFTER,
             )
 
@@ -80,8 +107,7 @@ def draw_explanations(session_state) -> list:
                 st.session_state.method_count[sample['method']] += 1
 
     assert len(drawn_explanations) == NUM_SAMPLES, (
-        f"Expected {NUM_SAMPLES}, got {len(drawn_explanations)}"
-    )
+        f"Expected {NUM_SAMPLES}, got {len(drawn_explanations)}")
     print(f"Sampled {len(drawn_explanations)} explanations")
     return drawn_explanations
 
@@ -95,13 +121,13 @@ def draw_checks() -> list:
     return [*attention_checks, *attention_checks_extra]
 
 
-def draw_samples(session_state) -> list:
+def draw_samples() -> list:
     """
     Draw samples and checks, returning a combined list.
     """
     # init samples list
     samples = []
-        
+
     # draw randomly balanced explanations
     explanations = draw_explanations(st.session_state)
     for explanation in explanations:
@@ -121,5 +147,5 @@ def draw_samples(session_state) -> list:
     for check in checks:
         insert_index = random.randint(0, len(samples))
         samples.insert(insert_index, check)
-        
+
     return samples

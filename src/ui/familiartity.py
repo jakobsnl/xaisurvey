@@ -20,26 +20,26 @@ def familiarity_check() -> None:
     # Bind radio selection directly to session state
     st.session_state.ml_familiarity = st.radio(
         familiarity_map['ml']['question'],
-        familiarity_map['ml']['scale'], 
+        familiarity_map['ml']['scale'],
         index=None,
-        horizontal=True
-    )
-    
+        horizontal=True)
+
     # Add a divider for better separation
     st.divider()
-    
+
     st.session_state.xai_familiarity = st.radio(
         familiarity_map['xai']['question'],
-        familiarity_map['xai']['scale'], 
+        familiarity_map['xai']['scale'],
         index=None,
-        horizontal=True
-    )
-    
+        horizontal=True)
+
     # Add a divider for better separation
     st.divider()
-    
-    st.info("After pressing 'Start Evaluation', please wait a few seconds until random sampling of explanations is completed.")
-    
+
+    st.info(
+        "After pressing 'Start Evaluation', please wait a few seconds until random sampling of explanations is completed."
+    )
+
     if st.button('Start Evaluation'):
         if st.session_state.ml_familiarity is not None and st.session_state.xai_familiarity is not None:
             st.session_state.evaluation_started = True
@@ -57,8 +57,8 @@ def familiarity_check() -> None:
             st.rerun()
         else:
             st.session_state.show_warning = True
-            
+
     if st.session_state.show_warning:
         st.warning('Please select an answer before proceeding.')
-        
+
     st.stop()

@@ -13,7 +13,7 @@ def initialize_states():
     preventing overwriting of existing state.
     """
     if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = False 
+        st.session_state.logged_in = False
     if 'prolific_pid' not in st.session_state:
         st.session_state.prolific_pid = None
     if 'evaluation_started' not in st.session_state:
@@ -21,7 +21,8 @@ def initialize_states():
     if 'examples_shown' not in st.session_state:
         st.session_state.examples_shown = False
     if 'method_count' not in st.session_state:
-        st.session_state.method_count = Counter()  # Track how many times each method has been shown
+        st.session_state.method_count = Counter(
+        )  # Track how many times each method has been shown
     if 'current_index' not in st.session_state:
         st.session_state.current_index = 0
     if 'current_sample_count' not in st.session_state:
@@ -33,10 +34,11 @@ def initialize_states():
     if 'show_warning' not in st.session_state:
         st.session_state.show_warning = False  # Flag for warning visibility
     if 'db' not in st.session_state:
-            st.session_state.db = get_database()
+        st.session_state.db = get_database()
     if 'user_id' not in st.session_state:
-            while True:
-                user_id = str(uuid.uuid4())  # Generate a new UUID
-                if not st.session_state.db['responses'].find_one({'user_id': user_id}):  # Check if the user ID already exists
-                    st.session_state.user_id = user_id
-                    break   
+        while True:
+            user_id = str(uuid.uuid4())  # Generate a new UUID
+            if not st.session_state.db['responses'].find_one(
+                {'user_id': user_id}):  # Check if the user ID already exists
+                st.session_state.user_id = user_id
+                break

@@ -10,17 +10,15 @@ def self_evaluation() -> None:
     """
     Displays the self-evaluation questions to the user and stores their responses.
     """
-    increase_font_size() 
+    increase_font_size()
     self_evaluation_map = QUESTION_SCALE_MAP['self_evaluation']
 
     # Bind radio selection directly to session state
-    self_evaluation_response = st.radio(
-        self_evaluation_map['question'],
-        self_evaluation_map['scale'], 
-        index=None,
-        horizontal=True
-    )
-    
+    self_evaluation_response = st.radio(self_evaluation_map['question'],
+                                        self_evaluation_map['scale'],
+                                        index=None,
+                                        horizontal=True)
+
     # Once submit button to store the response is clicked
     if st.button('Submit Survey'):
         if self_evaluation_response is not None:
@@ -38,6 +36,6 @@ def self_evaluation() -> None:
             st.rerun()
         else:
             st.session_state.show_warning = True
-            
+
     # Display warning if no response is selected
     insufficient_answer_warning()
