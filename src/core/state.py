@@ -5,6 +5,7 @@ from collections import Counter
 
 from core.get_database import get_database
 
+
 def initialize_states():
     """
     Initialize all necessary session state variables for the application.
