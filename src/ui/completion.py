@@ -63,10 +63,10 @@ def completion() -> None:
     <a href="{st.secrets.prolific['URL']}" target="_blank" style="
         display: inline-block;
         font-size: 16px;
-        font-weight: 600;
-        color: white;
-        background-color: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        font-weight: 300;
+        color: rgb(203, 33, 209);
+        background-color: rgb(225, 157, 227, 0.3);
+        border: 1px solid rgba(203, 33, 209, 0.3);
         padding: 0.75rem 2rem;
         border-radius: 0.5rem;
         text-decoration: none;

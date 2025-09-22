@@ -2,7 +2,7 @@ import streamlit as st
 
 from datetime import datetime, timezone
 
-from ui.briefing import display_briefing
+from ui.briefing import display_briefing, store_briefing
 from ui.completion import completion
 from ui.evaluation import evaluate_sample
 from ui.familiartity import familiarity_check
@@ -31,20 +31,8 @@ elif not st.session_state.examples_shown:
 
     # Once proceeding button to store the response is clicked
     if st.button('Proceed to Survey'):
-        st.session_state.examples_shown = True
-        st.session_state.db['briefings'].insert_one({
-            'pid':
-            st.session_state.prolific_pid,
-            'user_group':
-            st.session_state.username,
-            'user_id':
-            st.session_state.user_id,
-            'start':
-            st.session_state.timestamp,
-            'end':
-            datetime.now(timezone.utc).isoformat()
-        })
-        st.rerun()
+        # Write briefing stats to DB and set examples_shown to True
+        store_briefing()
 else:
     # Ask ML and XAI familiarity questions before starting the evaluation
     if not st.session_state.evaluation_started:

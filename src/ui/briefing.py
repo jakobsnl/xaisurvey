@@ -2,6 +2,7 @@ import streamlit as st
 
 from PIL import Image
 
+from datetime import datetime, timezone
 from config import EXAMPLE_IMAGES
 
 
@@ -72,3 +73,25 @@ def display_briefing() -> None:
     - Relevance maps are highlighting regions in 2D space. If e.g. an object is in the background of the image, covered by a see-through object like a fence, simply ask yourself, if your attention is drawn to the **ground truth** object, or if you are confused by the foreground object (e.g. fence). If you are distracted, the explanation may not be perfectly aligned with the **ground truth** and vice versa
     - Sometimes the relevance map only highlights parts of the **ground truth** object. Again, the score you assign depends on how well the explanation leads your attention to the **ground truth** or not, and not strictly on how well the explanation covers the **ground truth** object
     """)
+
+
+def store_briefing() -> None:
+    """
+    Store the user's briefing response in the database
+    """
+    st.session_state.examples_shown = True
+    st.session_state.db['briefings'].insert_one(
+        {
+            'pid':
+            st.session_state.prolific_pid,
+            'user_group':
+            st.session_state.username,
+            'user_id':
+            st.session_state.user_id,
+            'start':
+            st.session_state.timestamp,
+            'end':
+            datetime.now(timezone.utc).isoformat()
+        }
+    )
+    st.rerun()
