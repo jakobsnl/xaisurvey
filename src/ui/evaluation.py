@@ -96,6 +96,7 @@ def evaluate_check(drawn_sample) -> None:
             'user_id': st.session_state.user_id,
             'question': drawn_sample['question'],
             'answer': answer,
+            'correct_answers': drawn_sample.get('correct_answers'),
             'failed':
             0 if answer in drawn_sample.get('correct_answers') else 1,
             'index': st.session_state.current_index,
