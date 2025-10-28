@@ -1,7 +1,7 @@
 IMAGE_FOLDER = 'data'
-NUM_SAMPLES = 2  # max: len(data)=75, as the setup is built for users seeing each sample once
-NUM_CHECKS = 2
-NUM_EXTRA_CHECKS = 2
+NUM_SAMPLES = 1  # max: len(data)=75, as the setup is built for users seeing each sample once
+NUM_CHECKS = 1
+NUM_EXTRA_CHECKS = 1
 RESERVATION_TIMEOUT = 20 * 60  # seconds
 
 EXAMPLE_IMAGES = {
